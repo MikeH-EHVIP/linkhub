@@ -1,12 +1,10 @@
-﻿# LinkHub
+# LinkHub - Technical Documentation
 
-A WordPress plugin that creates Linktree-style link pages with Divi 5 Visual Builder integration.
+A standalone WordPress plugin that creates Linktree-style link pages with built-in click tracking and flexible styling options.
 
 ## Overview
 
-This plugin provides a "freemium" model for creating link tree pages:
-- **Free Tier**: Basic link tree pages with customizable styling options (colors, hero image shapes, social icons)
-- **Premium Tier**: Full Divi 5 Visual Builder customization through Link Type Designs
+LinkHub is a free WordPress plugin for creating link-in-bio pages. It requires no theme dependencies and provides a complete solution for managing and displaying link collections with analytics.
 
 ## Post Types
 
@@ -16,7 +14,7 @@ The main container for a collection of links. Each Tree is a standalone page wit
 - Optional fade effect on hero image
 - Title and bio/about text
 - Social media links bar
-- List of links
+- List of links with drag-and-drop ordering
 
 **Location**: `includes/PostTypes/TreePostType.php`
 
@@ -25,71 +23,52 @@ Individual link items that can be added to Trees. Each Link has:
 - Destination URL
 - Title (post title)
 - Optional description/subtitle
-- Optional icon or image
-- Display style (bar or card) for legacy rendering
+- Optional icon (emoji or icon class)
+- Optional image
+- Display style (bar, card, or heading)
 - Background and text color customization
-- Optional Link Type Design assignment
+- Click tracking analytics
 
 **Location**: `includes/PostTypes/LinkPostType.php`
-
-### Link Type Design (`LH_link_type_design`)
-Custom link layouts created with Divi 5 Visual Builder. These templates define how links appear and can use special modules to display link data dynamically.
-
-**Location**: `includes/PostTypes/LinkTypeDesignPostType.php`
-
-## Divi 5 Modules
-
-Located in `visual-builder/src/`:
-
-### Link Title (`dtol/link-title`)
-Displays the link's title with font styling options.
-- Files: `link-title/module.json`, `link-title/styles.jsx`
-
-### Link Image (`dtol/link-image`)
-Displays the link's featured image with border-radius and sizing options.
-- Files: `link-image/module.json`, `link-image/styles.jsx`
-
-### Link Icon (`dtol/link-icon`)
-Displays the link's icon.
-- Files: `link-icon/module.json`, `link-icon/styles.jsx`
-
-### Link Description (`dtol/link-description`)
-Displays optional description/subtitle text below the link title.
-- Files: `link-description/module.json`, `link-description/styles.jsx`
 
 ## Directory Structure
 
 ```
 linkhub/
 ├── assets/
-│   └── css/
-│       └── modules.css          # Frontend styles
+│   ├── css/
+│   │   └── modules.css          # Frontend styles
+│   └── js/
+│       └── modules.js           # Frontend JavaScript
 ├── includes/
 │   ├── Admin/
-│   │   └── MetaBoxes.php        # Admin meta boxes for all post types
+│   │   ├── MetaBoxes.php        # Admin meta boxes for post types
+│   │   ├── ClickwhaleImporter.php  # CSV import from Clickwhale
+│   │   └── ExportImport.php     # Tree export/import functionality
+│   ├── Export/
+│   │   └── TreeExporter.php     # Export tree data to JSON
 │   ├── Modules/
-│   │   └── TreeOfLinksModules.php  # Divi module registration & rendering
+│   │   └── TreeOfLinksModules.php  # Module-related utilities
 │   ├── PostTypes/
 │   │   ├── LinkPostType.php     # Link CPT registration
-│   │   ├── LinkTypeDesignPostType.php  # Link Type Design CPT
 │   │   └── TreePostType.php     # Tree CPT registration
 │   ├── Rendering/
 │   │   ├── LinkTypeRenderer.php # Renders individual links
 │   │   └── TreeRenderer.php     # Renders tree pages on frontend
+│   ├── Shortcodes/              # Shortcode handlers (if any)
 │   └── Tracking/
 │       └── RedirectHandler.php  # Click tracking via /go/ID/ URLs
-├── visual-builder/
-│   ├── src/
-│   │   ├── index.jsx            # Module registration entry point
-│   │   ├── link-title/          # Link Title module
-│   │   ├── link-image/          # Link Image module
-│   │   ├── link-icon/           # Link Icon module
-│   │   ├── link-description/    # Link Description module
-│   │   └── tree-display/        # Tree Display module (container)
-│   └── build/
-│       └── linkhub.js  # Compiled bundle
-├── linkhub.php       # Main plugin file
+├── scripts/
+│   ├── build-plugin-zip.ps1     # PowerShell build script
+│   ├── build-plugin-zip.sh      # Bash build script
+│   └── rebrand-to-linkhub.ps1   # Rebranding utility
+├── linkhub.php                  # Main plugin file
+├── autoload.php                 # PSR-4 autoloader
+├── composer.json
+├── package.json
 ├── CHANGELOG.md
+├── INSTALL.md
+├── PLAN.md
 └── PROJECT.md                   # This file
 ```
 
@@ -98,13 +77,16 @@ linkhub/
 ### Click Tracking
 All links use tracking URLs (`/go/{link_id}/`) that record clicks before redirecting to the destination URL.
 - **Important**: After plugin activation or permalink changes, visit Settings > Permalinks to flush rewrite rules.
+- Tracks click count and last clicked timestamp
+- Cached for 12 hours for optimal performance
 
-### Legacy Display Styles
-For users without Divi or for free-tier usage:
+### Display Styles
+Three built-in styles for rendering links:
 - **Bar Style**: Linktree-style horizontal button with optional thumbnail
 - **Card Style**: Image card with colored banner below
+- **Heading Style**: Text divider for organizing link sections (small, medium, large)
 
-Both styles support customizable background and text colors per link.
+All styles support customizable background and text colors per link.
 
 ### Tree Page Styling Options
 Each Tree can be customized with:
@@ -117,18 +99,17 @@ Each Tree can be customized with:
 - **Social Icon Style**: Circle, rounded, square, or minimal (no background)
 - **Social Icon Color**: Default icon color (platform colors on hover)
 
-### Divi 5 Integration
-- Modules use Divi 5's Module API with `ModuleRegistration`
-- PHP rendering uses `Module::render()` and `Style::add()`
-- JSX preview uses `elements.style()` and `elements.styleComponents()`
-- Link Type Designs leverage Divi's full styling capabilities
+### Import/Export
+- **Export**: Export entire trees to JSON format with all settings and links
+- **Import**: Import trees from JSON
+- **Clickwhale CSV**: Import links from Clickwhale CSV exports
 
 ## Meta Keys Reference
 
 ### Tree Post Type (`_LH_*`)
 | Key | Description |
 |-----|-------------|
-| `_LH_tree_links` | Array of link IDs with optional design overrides |
+| `_LH_tree_links` | Serialized array of link IDs for ordering |
 | `_LH_header_image` | Header image attachment ID |
 | `_LH_about_text` | Bio/description text |
 | `_LH_social_links` | Array of social platform/URL pairs |
@@ -147,47 +128,77 @@ Each Tree can be customized with:
 | `_LH_url` | Destination URL |
 | `_LH_description` | Optional subtitle/description |
 | `_LH_icon` | Icon class or emoji |
-| `_LH_image` | Featured image attachment ID |
-| `_LH_display_style` | Legacy style (bar/card) |
-| `_LH_link_type_design` | Assigned Link Type Design ID |
+| `_LH_image_id` | Featured image attachment ID |
+| `_LH_display_style` | Display style (bar/card/heading) |
 | `_LH_background_color` | Link background color |
 | `_LH_text_color` | Link text color |
+| `_LH_heading_size` | Heading size for heading style (small/medium/large) |
 | `_LH_click_count` | Total click count |
 | `_LH_last_clicked` | Last click timestamp |
 
-## Development
+## Rendering Flow
 
-### Building Visual Builder Assets
-```bash
-cd visual-builder
-npm install
-npm run build
-```
-
-### Module JSON Structure
-Each module has a `module.json` defining:
-- `name`: Module identifier (e.g., `dtol/link-title`)
-- `d5Support`: Set to `true` for Divi 5
-- `attributes`: Styling options mapped to selectors
-
-### Rendering Flow
 1. User visits Tree page (`/link-tree/slug/`)
-2. `TreeRenderer::render_tree_content()` intercepts content
-3. For each link, `LinkTypeRenderer::render()` determines rendering method:
-   - If Link Type Design assigned: Uses Divi's `et_builder_render_layout()`
-   - Otherwise: Uses `render_legacy_bar()` or `render_legacy_card()`
-4. Inline styles applied for page-level customizations
+2. `TreeRenderer::render_tree_content()` intercepts content filter
+3. Fetches tree metadata and associated links
+4. For each link, `LinkTypeRenderer::render()` determines rendering method:
+   - `render_legacy_bar()` for bar style
+   - `render_legacy_card()` for card style
+   - `render_heading()` for heading style
+5. Inline styles applied for tree-level and link-level customizations
+6. Social links rendered if configured
+7. Complete HTML output returned
 
 ## Hooks & Filters
 
 ### Actions
-- `LH_before_link_render` - Before rendering individual link
-- `LH_after_link_render` - After rendering individual link
+- `LH_init` - Fired after plugin initialization
+- `LH_activated` - Fired on plugin activation
+- `LH_deactivated` - Fired on plugin deactivation
+- `LH_link_clicked` - Fired when a link is clicked (params: `$link_id`, `$new_count`)
 
 ### Filters
 - `LH_link_tracking_url` - Modify tracking URL format
 - `LH_tree_links` - Filter links before rendering
 - `LH_social_platforms` - Add/modify available social platforms
+
+## Development
+
+### Requirements
+- WordPress 6.0+
+- PHP 7.4+
+- Composer for dependency management
+
+### Building
+```bash
+# Install PHP dependencies
+composer install
+
+# Install npm dependencies
+npm install
+
+# Build assets
+npm run build
+
+# Create distribution zip
+./scripts/build-plugin-zip.ps1  # Windows
+./scripts/build-plugin-zip.sh   # Linux/Mac
+```
+
+### Cache Invalidation
+Manually invalidate link cache:
+```php
+use ElyseVIP\LinkHub\Tracking\RedirectHandler;
+RedirectHandler::invalidate_cache($link_id);
+```
+
+### Extending Click Tracking
+Hook into link clicks for custom analytics:
+```php
+add_action('LH_link_clicked', function($link_id, $click_count) {
+    // Send to Google Analytics, custom tracking, etc.
+}, 10, 2);
+```
 
 ## Changelog
 
@@ -195,4 +206,4 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## License
 
-GPL v2 or later
+GPL-2.0-or-later

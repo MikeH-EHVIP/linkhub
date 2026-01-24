@@ -41,13 +41,8 @@ Create beautiful link-in-bio pages for WordPress with CPT-based link management 
    - Icon (emoji or icon class)
    - Optional image
    - Display style (bar, card, or heading)
-2. Create a new design
-3. Use the Divi Visual Builder with special DTOL modules:
-   - **Link Title** - Displays the link's title
-   - **Link Image** - Displays the link's image
-   - **Link Icon** - Displays the link's icon
-4. Style these modules using Divi's design controls
-5. Save the design and assign it to links
+   - Background and text colors
+3. Save the link
 
 ### Creating a Tree
 
@@ -56,14 +51,14 @@ Create beautiful link-in-bio pages for WordPress with CPT-based link management 
    - **Header Image**: Profile picture or logo (recommended 400x400px)
    - **About Text**: Short bio or description
    - **Social Links**: Add social media icons with URLs
+   - **Styling**: Background colors, hero image shape, colors
 3. Use the **Link Tree Items** meta box to select and order links
-4. Optionally override the Link Type Design per-link
-5. Drag and drop to reorder
-6. Publish the tree
+4. Drag and drop to reorder
+5. Publish the tree
 
 ### Displaying Trees
 
-Trees are displayed at their permalink URL (e.g., `/link-tree/my-tree/`). For custom page layouts, use Divi Theme Builder to create a template for the Tree post type.
+Trees are displayed at their permalink URL (e.g., `/link-tree/my-tree/`).
 
 ## Click Tracking
 
@@ -87,29 +82,35 @@ For high-traffic sites, consider using Redis or Memcached.
 
 ```
 linkhub/
-├── linkhub.php      # Main plugin file
-├── composer.json                # Autoloader configuration
+├── linkhub.php                  # Main plugin file
+├── composer.json                # Composer configuration
+├── package.json                 # NPM configuration
+├── autoload.php                 # PSR-4 autoloader
 ├── includes/                    # PHP classes (PSR-4)
 │   ├── PostTypes/              # CPT registration
 │   │   ├── TreePostType.php    # Link Trees
-│   │   ├── LinkPostType.php    # Individual Links
-│   │   └── LinkTypeDesignPostType.php  # Link Templates
-│   ├── Tracking/               # Redirect handler
+│   │   └── LinkPostType.php    # Individual Links
+│   ├── Tracking/               # Click tracking and redirects
+│   │   └── RedirectHandler.php
 │   ├── Admin/                  # Meta boxes and admin UI
+│   │   ├── MetaBoxes.php
+│   │   ├── ClickwhaleImporter.php
+│   │   └── ExportImport.php
 │   ├── Rendering/              # Frontend rendering
 │   │   ├── TreeRenderer.php    # Renders Tree pages
-│   │   └── LinkTypeRenderer.php # Renders individual links with designs
-│   └── Modules/                # Divi 5 module registration
-├── visual-builder/             # Divi 5 Visual Builder components
-│   ├── src/                    # React/JSX source files
-│   │   ├── index.jsx           # Module registration
-│   │   ├── link-title/         # Link Title module
-│   │   ├── link-image/         # Link Image module
-│   │   └── link-icon/          # Link Icon module
-│   └── build/                  # Compiled JavaScript
+│   │   └── LinkTypeRenderer.php # Renders individual links
+│   ├── Export/                 # Export functionality
+│   │   └── TreeExporter.php
+│   └── Modules/                # Module utilities
+│       └── TreeOfLinksModules.php
 ├── assets/                     # Frontend assets
-│   └── css/
-│       └── modules.css         # Frontend styles
+│   ├── css/
+│   │   └── modules.css         # Frontend styles
+│   └── js/
+│       └── modules.js          # Frontend JavaScript
+├── scripts/                    # Build scripts
+│   ├── build-plugin-zip.ps1
+│   └── build-plugin-zip.sh
 └── README.md
 ```
 
@@ -120,20 +121,14 @@ linkhub/
 | Post Type | Slug | Purpose |
 |-----------|------|---------|
 | Link Tree | `LH_tree` | Collections of links with profile settings |
-| Link | `LH_link` | Individual link with URL, icon, image |
-| Link Type Design | `LH_link_type_design` | Divi Builder template for link appearance |
+| Link | `LH_link` | Individual link with URL, icon, image, and tracking |
 
-### Divi 5 Modules
+### Display Styles
 
-The following modules are available in the Divi Visual Builder when editing Link Type Designs:
-
-| Module | Purpose |
-|--------|---------|
-| Link Title | Displays the link's title text |
-| Link Image | Displays the link's associated image |
-| Link Icon | Displays the link's icon/emoji |
-
-These are **design-only** modules - they show placeholder content in the builder but render actual link data on the frontend.
+Three built-in styles for rendering links:
+- **Bar**: Linktree-style button with optional thumbnail
+- **Card**: Image card with colored banner
+- **Heading**: Text divider for organizing sections (small/medium/large sizes)
 
 ## Hooks & Filters
 
@@ -146,7 +141,9 @@ These are **design-only** modules - they show placeholder content in the builder
 
 ### Filters
 
-- `et_builder_post_types` - Enables Divi Builder on Tree CPT
+- `LH_link_tracking_url` - Modify tracking URL format
+- `LH_tree_links` - Filter links before rendering
+- `LH_social_platforms` - Add/modify available social platforms
 
 ## Development
 
