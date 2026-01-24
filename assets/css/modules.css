@@ -537,6 +537,31 @@
     color: #666;
 }
 
+/* Heading Styles */
+.dtol-heading {
+    text-align: center;
+    font-weight: 600;
+    color: #333;
+    margin: 24px 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dtol-heading-small {
+    font-size: 14px;
+    margin: 16px 0 8px 0;
+}
+
+.dtol-heading-medium {
+    font-size: 18px;
+    margin: 24px 0 12px 0;
+}
+
+.dtol-heading-large {
+    font-size: 24px;
+    margin: 32px 0 16px 0;
+}
+
 /* Link Item Wrapper (from LinkTypeRenderer) */
 .lh-link-item-wrapper {
     display: block;

@@ -143,7 +143,27 @@ class TreeRenderer {
         $output .= '<div class="dtol-tree-links">';
 
         foreach ($tree_links as $tree_link) {
-            // Handle both old format (just ID) and new format (array with link_id and design_id)
+            // Check if it's a heading
+            if (is_array($tree_link) && isset($tree_link['type']) && $tree_link['type'] === 'heading') {
+                $heading_text = isset($tree_link['text']) ? $tree_link['text'] : '';
+                $heading_size = isset($tree_link['size']) ? $tree_link['size'] : 'medium';
+                
+                $size_classes = [
+                    'small' => 'dtol-heading-small',
+                    'medium' => 'dtol-heading-medium',
+                    'large' => 'dtol-heading-large'
+                ];
+                $size_class = isset($size_classes[$heading_size]) ? $size_classes[$heading_size] : $size_classes['medium'];
+                
+                $output .= sprintf(
+                    '<div class="dtol-heading %s">%s</div>',
+                    esc_attr($size_class),
+                    esc_html($heading_text)
+                );
+                continue;
+            }
+            
+            // Handle links - both old format (just ID) and new format (array with link_id)
             if (is_array($tree_link)) {
                 $link_id = $tree_link['link_id'] ?? 0;
                 $design_override = $tree_link['design_id'] ?? 0;

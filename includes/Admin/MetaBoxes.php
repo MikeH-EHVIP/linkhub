@@ -131,6 +131,9 @@ class MetaBoxes {
                 <button type="button" id="dtol-add-link-btn" class="button">
                     <?php _e('Add Link', 'linkhub'); ?>
                 </button>
+                <button type="button" id="dtol-add-heading-btn" class="button">
+                    <?php _e('Add Heading', 'linkhub'); ?>
+                </button>
                 <a href="<?php echo admin_url('post-new.php?post_type=' . LinkPostType::POST_TYPE); ?>" 
                    class="button" target="_blank">
                     <?php _e('Create New Link', 'linkhub'); ?>
@@ -139,6 +142,35 @@ class MetaBoxes {
             
             <ul id="dtol-selected-links" class="dtol-links-list">
                 <?php foreach ($tree_links as $tree_link): 
+                    // Check if it's a heading
+                    if (is_array($tree_link) && isset($tree_link['type']) && $tree_link['type'] === 'heading'):
+                        $heading_text = isset($tree_link['text']) ? $tree_link['text'] : '';
+                        $heading_size = isset($tree_link['size']) ? $tree_link['size'] : 'medium';
+                ?>
+                    <li class="dtol-link-item dtol-heading-item" data-type="heading">
+                        <span class="dtol-drag-handle dashicons dashicons-menu"></span>
+                        <div class="dtol-link-info">
+                            <span class="dashicons dashicons-editor-textcolor" style="color: #999;"></span>
+                            <strong><?php _e('Heading:', 'linkhub'); ?> <?php echo esc_html($heading_text); ?></strong>
+                            <span class="dtol-link-meta"><?php printf(__('Size: %s', 'linkhub'), $heading_size); ?></span>
+                        </div>
+                        <div class="dtol-link-actions">
+                            <button type="button" class="button button-small dtol-edit-heading">
+                                <?php _e('Edit', 'linkhub'); ?>
+                            </button>
+                            <button type="button" class="button button-small dtol-remove-link">
+                                <?php _e('Remove', 'linkhub'); ?>
+                            </button>
+                        </div>
+                        <button type="button" class="dtol-insert-here button button-small" title="<?php _e('Insert item here', 'linkhub'); ?>">
+                            <span class="dashicons dashicons-plus-alt"></span>
+                        </button>
+                        <input type="hidden" class="dtol-item-type" name="LH_tree_items[type][]" value="heading">
+                        <input type="hidden" class="dtol-heading-text" name="LH_tree_items[text][]" value="<?php echo esc_attr($heading_text); ?>">
+                        <input type="hidden" class="dtol-heading-size" name="LH_tree_items[size][]" value="<?php echo esc_attr($heading_size); ?>">
+                    </li>
+                <?php else:
+                    // It's a link
                     $link_id = isset($tree_link['link_id']) ? $tree_link['link_id'] : $tree_link;
                     
                     $link = get_post($link_id);
@@ -146,9 +178,19 @@ class MetaBoxes {
                     
                     $url = get_post_meta($link_id, LinkPostType::META_URL, true);
                     $clicks = get_post_meta($link_id, LinkPostType::META_CLICK_COUNT, true);
+                    $image_id = get_post_meta($link_id, LinkPostType::META_IMAGE, true);
+                    $thumbnail = '';
+                    if ($image_id) {
+                        $thumbnail = wp_get_attachment_image_url($image_id, 'thumbnail');
+                    }
                 ?>
-                    <li class="dtol-link-item" data-link-id="<?php echo esc_attr($link_id); ?>">
+                    <li class="dtol-link-item" data-link-id="<?php echo esc_attr($link_id); ?>" data-type="link">
                         <span class="dtol-drag-handle dashicons dashicons-menu"></span>
+                        <?php if ($thumbnail): ?>
+                            <img src="<?php echo esc_url($thumbnail); ?>" class="dtol-link-thumbnail" alt="">
+                        <?php else: ?>
+                            <span class="dtol-link-thumbnail-placeholder dashicons dashicons-admin-links"></span>
+                        <?php endif; ?>
                         <div class="dtol-link-info">
                             <strong><?php echo esc_html($link->post_title); ?></strong>
                             <span class="dtol-link-url"><?php echo esc_html($url); ?></span>
@@ -163,9 +205,13 @@ class MetaBoxes {
                                 <?php _e('Remove', 'linkhub'); ?>
                             </button>
                         </div>
-                        <input type="hidden" class="dtol-link-id-input" name="LH_tree_links[]" value="<?php echo esc_attr($link_id); ?>">
+                        <button type="button" class="dtol-insert-here button button-small" title="<?php _e('Insert item here', 'linkhub'); ?>">
+                            <span class="dashicons dashicons-plus-alt"></span>
+                        </button>
+                        <input type="hidden" class="dtol-item-type" name="LH_tree_items[type][]" value="link">
+                        <input type="hidden" class="dtol-link-id-input" name="LH_tree_items[link_id][]" value="<?php echo esc_attr($link_id); ?>">
                     </li>
-                <?php endforeach; ?>
+                <?php endif; endforeach; ?>
             </ul>
             
             <?php if (empty($tree_links)): ?>
@@ -176,10 +222,10 @@ class MetaBoxes {
         </div>
         
         <style>
-            .lh-links-toolbar { margin-bottom: 15px; }
-            .lh-links-toolbar select { margin-right: 5px; }
-            .lh-links-list { list-style: none; margin: 0; padding: 0; }
-            .lh-link-item { 
+            .dtol-links-toolbar { margin-bottom: 15px; }
+            .dtol-links-toolbar select { margin-right: 5px; }
+            .dtol-links-list { list-style: none; margin: 0; padding: 0; }
+            .dtol-link-item { 
                 background: #f9f9f9; 
                 border: 1px solid #ddd; 
                 padding: 12px; 
@@ -187,17 +233,64 @@ class MetaBoxes {
                 display: flex; 
                 align-items: center; 
                 cursor: move;
+                position: relative;
             }
-            .lh-drag-handle { margin-right: 10px; color: #999; cursor: grab; }
-            .lh-link-info { flex: 1; }
-            .lh-link-info strong { display: block; margin-bottom: 4px; }
-            .lh-link-url, .lh-link-clicks { 
+            .dtol-heading-item { background: #fff9e6; border-left: 4px solid #f0b849; }
+            .dtol-drag-handle { margin-right: 10px; color: #999; cursor: grab; flex-shrink: 0; }
+            .dtol-link-thumbnail { 
+                width: 50px; 
+                height: 50px; 
+                object-fit: cover; 
+                border-radius: 4px; 
+                margin-right: 12px;
+                flex-shrink: 0;
+            }
+            .dtol-link-thumbnail-placeholder {
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #ddd;
+                border-radius: 4px;
+                margin-right: 12px;
+                color: #999;
+                font-size: 28px;
+                flex-shrink: 0;
+            }
+            .dtol-link-info { flex: 1; min-width: 0; }
+            .dtol-link-info strong { display: block; margin-bottom: 4px; }
+            .dtol-link-url, .dtol-link-clicks, .dtol-link-meta { 
                 font-size: 12px; 
                 color: #666; 
                 margin-right: 15px; 
+                display: inline-block;
             }
-            .lh-link-actions { display: flex; gap: 5px; }
-            .lh-empty-message { 
+            .dtol-link-actions { display: flex; gap: 5px; flex-shrink: 0; }
+            .dtol-insert-here {
+                position: absolute;
+                top: -12px;
+                left: 50%;
+                transform: translateX(-50%);
+                opacity: 0;
+                transition: opacity 0.2s;
+                z-index: 10;
+                padding: 2px 8px !important;
+                height: auto !important;
+                line-height: 1 !important;
+                background: #2271b1 !important;
+                color: white !important;
+                border-color: #2271b1 !important;
+            }
+            .dtol-insert-here .dashicons {
+                font-size: 14px;
+                width: 14px;
+                height: 14px;
+            }
+            .dtol-link-item:hover .dtol-insert-here {
+                opacity: 1;
+            }
+            .dtol-empty-message { 
                 padding: 20px; 
                 text-align: center; 
                 background: #f9f9f9; 
@@ -719,10 +812,37 @@ class MetaBoxes {
             return;
         }
         
-        // Save tree links
-        $link_ids = isset($_POST['LH_tree_links']) ? array_map('absint', $_POST['LH_tree_links']) : [];
+        // Save tree items (links and headings)
+        $items = [];
         
-        update_post_meta($post_id, TreePostType::META_TREE_LINKS, $link_ids);
+        if (isset($_POST['LH_tree_items']['type']) && is_array($_POST['LH_tree_items']['type'])) {
+            $types = $_POST['LH_tree_items']['type'];
+            $link_ids = isset($_POST['LH_tree_items']['link_id']) ? $_POST['LH_tree_items']['link_id'] : [];
+            $texts = isset($_POST['LH_tree_items']['text']) ? $_POST['LH_tree_items']['text'] : [];
+            $sizes = isset($_POST['LH_tree_items']['size']) ? $_POST['LH_tree_items']['size'] : [];
+            
+            $link_index = 0;
+            $heading_index = 0;
+            
+            foreach ($types as $index => $type) {
+                if ($type === 'link' && isset($link_ids[$link_index])) {
+                    $items[] = [
+                        'type' => 'link',
+                        'link_id' => absint($link_ids[$link_index])
+                    ];
+                    $link_index++;
+                } elseif ($type === 'heading' && isset($texts[$heading_index])) {
+                    $items[] = [
+                        'type' => 'heading',
+                        'text' => sanitize_text_field($texts[$heading_index]),
+                        'size' => in_array($sizes[$heading_index], ['small', 'medium', 'large']) ? $sizes[$heading_index] : 'medium'
+                    ];
+                    $heading_index++;
+                }
+            }
+        }
+        
+        update_post_meta($post_id, TreePostType::META_TREE_LINKS, $items);
     }
 
     /**
@@ -913,14 +1033,14 @@ class MetaBoxes {
             jQuery(document).ready(function($) {
                 // Sortable links
                 $('#dtol-selected-links').sortable({
-                    handle: '.lh-drag-handle',
+                    handle: '.dtol-drag-handle',
                     placeholder: 'dtol-link-placeholder',
                     update: function() {
-                        $('.lh-empty-message').hide();
+                        $('.dtol-empty-message').hide();
                     }
                 });
                 
-                // Add link
+                // Add link to end
                 $('#dtol-add-link-btn').on('click', function() {
                     var linkId = $('#dtol-add-link-select').val();
                     var linkTitle = $('#dtol-add-link-select option:selected').text();
@@ -928,34 +1048,176 @@ class MetaBoxes {
                     if (!linkId) return;
                     
                     // Check if already added
-                    if ($('.lh-link-item[data-link-id=\"' + linkId + '\"]').length) {
+                    if ($('.dtol-link-item[data-link-id=\"' + linkId + '\"]').length) {
                         alert('This link is already added.');
                         return;
                     }
                     
-                    var item = $('<li class=\"dtol-link-item\" data-link-id=\"' + linkId + '\">' +
+                    addLinkItem(linkId, linkTitle);
+                    $('#dtol-add-link-select').val('');
+                });
+                
+                // Add heading
+                $('#dtol-add-heading-btn').on('click', function() {
+                    var headingText = prompt('Enter heading text:');
+                    if (!headingText) return;
+                    
+                    var headingSize = prompt('Enter heading size (small, medium, or large):', 'medium');
+                    if (!headingSize || !['small', 'medium', 'large'].includes(headingSize)) {
+                        headingSize = 'medium';
+                    }
+                    
+                    addHeadingItem(headingText, headingSize);
+                });
+                
+                // Edit heading
+                $(document).on('click', '.dtol-edit-heading', function() {
+                    var item = $(this).closest('.dtol-link-item');
+                    var currentText = item.find('.dtol-heading-text').val();
+                    var currentSize = item.find('.dtol-heading-size').val();
+                    
+                    var newText = prompt('Edit heading text:', currentText);
+                    if (newText === null) return;
+                    
+                    var newSize = prompt('Edit heading size (small, medium, or large):', currentSize);
+                    if (!newSize || !['small', 'medium', 'large'].includes(newSize)) {
+                        newSize = currentSize;
+                    }
+                    
+                    item.find('.dtol-link-info strong').html('Heading: ' + $('<div>').text(newText).html());
+                    item.find('.dtol-link-meta').text('Size: ' + newSize);
+                    item.find('.dtol-heading-text').val(newText);
+                    item.find('.dtol-heading-size').val(newSize);
+                });
+                
+                // Insert here button
+                $(document).on('click', '.dtol-insert-here', function() {
+                    var targetItem = $(this).closest('.dtol-link-item');
+                    var choice = prompt('Insert: 1 = Link, 2 = Heading', '1');
+                    
+                    if (choice === '1') {
+                        var linkId = prompt('Enter Link ID (or use the dropdown above)');
+                        if (!linkId) return;
+                        
+                        // Check if already added
+                        if ($('.dtol-link-item[data-link-id=\"' + linkId + '\"]').length) {
+                            alert('This link is already added.');
+                            return;
+                        }
+                        
+                        addLinkItemBefore(linkId, 'Link ' + linkId, targetItem);
+                    } else if (choice === '2') {
+                        var headingText = prompt('Enter heading text:');
+                        if (!headingText) return;
+                        
+                        var headingSize = prompt('Enter heading size (small, medium, or large):', 'medium');
+                        if (!headingSize || !['small', 'medium', 'large'].includes(headingSize)) {
+                            headingSize = 'medium';
+                        }
+                        
+                        addHeadingItemBefore(headingText, headingSize, targetItem);
+                    }
+                });
+                
+                // Remove link/heading
+                $(document).on('click', '.dtol-remove-link', function() {
+                    $(this).closest('.dtol-link-item').remove();
+                    if ($('#dtol-selected-links .dtol-link-item').length === 0) {
+                        $('.dtol-empty-message').show();
+                    }
+                });
+                
+                // Helper function to add link item
+                function addLinkItem(linkId, linkTitle) {
+                    var item = $('<li class=\"dtol-link-item\" data-link-id=\"' + linkId + '\" data-type=\"link\">' +
                         '<span class=\"dtol-drag-handle dashicons dashicons-menu\"></span>' +
+                        '<span class=\"dtol-link-thumbnail-placeholder dashicons dashicons-admin-links\"></span>' +
                         '<div class=\"dtol-link-info\">' +
                             '<strong>' + linkTitle + '</strong>' +
                         '</div>' +
                         '<div class=\"dtol-link-actions\">' +
                             '<button type=\"button\" class=\"button button-small dtol-remove-link\">Remove</button>' +
                         '</div>' +
-                        '<input type=\"hidden\" name=\"LH_tree_links[]\" value=\"' + linkId + '\">' +
+                        '<button type=\"button\" class=\"dtol-insert-here button button-small\" title=\"Insert item here\">' +
+                            '<span class=\"dashicons dashicons-plus-alt\"></span>' +
+                        '</button>' +
+                        '<input type=\"hidden\" class=\"dtol-item-type\" name=\"LH_tree_items[type][]\" value=\"link\">' +
+                        '<input type=\"hidden\" name=\"LH_tree_items[link_id][]\" value=\"' + linkId + '\">' +
                     '</li>');
                     
                     $('#dtol-selected-links').append(item);
-                    $('.lh-empty-message').hide();
-                    $('#dtol-add-link-select').val('');
-                });
+                    $('.dtol-empty-message').hide();
+                }
                 
-                // Remove link
-                $(document).on('click', '.lh-remove-link', function() {
-                    $(this).closest('.lh-link-item').remove();
-                    if ($('#dtol-selected-links .lh-link-item').length === 0) {
-                        $('.lh-empty-message').show();
-                    }
-                });
+                function addLinkItemBefore(linkId, linkTitle, targetItem) {
+                    var item = $('<li class=\"dtol-link-item\" data-link-id=\"' + linkId + '\" data-type=\"link\">' +
+                        '<span class=\"dtol-drag-handle dashicons dashicons-menu\"></span>' +
+                        '<span class=\"dtol-link-thumbnail-placeholder dashicons dashicons-admin-links\"></span>' +
+                        '<div class=\"dtol-link-info\">' +
+                            '<strong>' + linkTitle + '</strong>' +
+                        '</div>' +
+                        '<div class=\"dtol-link-actions\">' +
+                            '<button type=\"button\" class=\"button button-small dtol-remove-link\">Remove</button>' +
+                        '</div>' +
+                        '<button type=\"button\" class=\"dtol-insert-here button button-small\" title=\"Insert item here\">' +
+                            '<span class=\"dashicons dashicons-plus-alt\"></span>' +
+                        '</button>' +
+                        '<input type=\"hidden\" class=\"dtol-item-type\" name=\"LH_tree_items[type][]\" value=\"link\">' +
+                        '<input type=\"hidden\" name=\"LH_tree_items[link_id][]\" value=\"' + linkId + '\">' +
+                    '</li>');
+                    
+                    targetItem.before(item);
+                    $('.dtol-empty-message').hide();
+                }
+                
+                // Helper function to add heading item
+                function addHeadingItem(text, size) {
+                    var item = $('<li class=\"dtol-link-item dtol-heading-item\" data-type=\"heading\">' +
+                        '<span class=\"dtol-drag-handle dashicons dashicons-menu\"></span>' +
+                        '<div class=\"dtol-link-info\">' +
+                            '<span class=\"dashicons dashicons-editor-textcolor\" style=\"color: #999;\"></span>' +
+                            '<strong>Heading: ' + $('<div>').text(text).html() + '</strong>' +
+                            '<span class=\"dtol-link-meta\">Size: ' + size + '</span>' +
+                        '</div>' +
+                        '<div class=\"dtol-link-actions\">' +
+                            '<button type=\"button\" class=\"button button-small dtol-edit-heading\">Edit</button>' +
+                            '<button type=\"button\" class=\"button button-small dtol-remove-link\">Remove</button>' +
+                        '</div>' +
+                        '<button type=\"button\" class=\"dtol-insert-here button button-small\" title=\"Insert item here\">' +
+                            '<span class=\"dashicons dashicons-plus-alt\"></span>' +
+                        '</button>' +
+                        '<input type=\"hidden\" class=\"dtol-item-type\" name=\"LH_tree_items[type][]\" value=\"heading\">' +
+                        '<input type=\"hidden\" class=\"dtol-heading-text\" name=\"LH_tree_items[text][]\" value=\"' + $('<div>').text(text).html() + '\">' +
+                        '<input type=\"hidden\" class=\"dtol-heading-size\" name=\"LH_tree_items[size][]\" value=\"' + size + '\">' +
+                    '</li>');
+                    
+                    $('#dtol-selected-links').append(item);
+                    $('.dtol-empty-message').hide();
+                }
+                
+                function addHeadingItemBefore(text, size, targetItem) {
+                    var item = $('<li class=\"dtol-link-item dtol-heading-item\" data-type=\"heading\">' +
+                        '<span class=\"dtol-drag-handle dashicons dashicons-menu\"></span>' +
+                        '<div class=\"dtol-link-info\">' +
+                            '<span class=\"dashicons dashicons-editor-textcolor\" style=\"color: #999;\"></span>' +
+                            '<strong>Heading: ' + $('<div>').text(text).html() + '</strong>' +
+                            '<span class=\"dtol-link-meta\">Size: ' + size + '</span>' +
+                        '</div>' +
+                        '<div class=\"dtol-link-actions\">' +
+                            '<button type=\"button\" class=\"button button-small dtol-edit-heading\">Edit</button>' +
+                            '<button type=\"button\" class=\"button button-small dtol-remove-link\">Remove</button>' +
+                        '</div>' +
+                        '<button type=\"button\" class=\"dtol-insert-here button button-small\" title=\"Insert item here\">' +
+                            '<span class=\"dashicons dashicons-plus-alt\"></span>' +
+                        '</button>' +
+                        '<input type=\"hidden\" class=\"dtol-item-type\" name=\"LH_tree_items[type][]\" value=\"heading\">' +
+                        '<input type=\"hidden\" class=\"dtol-heading-text\" name=\"LH_tree_items[text][]\" value=\"' + $('<div>').text(text).html() + '\">' +
+                        '<input type=\"hidden\" class=\"dtol-heading-size\" name=\"LH_tree_items[size][]\" value=\"' + size + '\">' +
+                    '</li>');
+                    
+                    targetItem.before(item);
+                    $('.dtol-empty-message').hide();
+                }
                 
                 // Image upload
                 var mediaFrame;
