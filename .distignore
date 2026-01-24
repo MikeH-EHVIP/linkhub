@@ -1,0 +1,60 @@
+# Development files
+.git
+.gitignore
+.gitattributes
+.distignore
+.claude
+
+# Node/NPM
+node_modules
+package.json
+package-lock.json
+webpack.config.js
+tsconfig.json
+eslint.config.js
+.eslintrc.js
+
+# Composer
+composer.json
+composer.lock
+vendor
+
+# Source files (no longer used - Divi removed)
+src
+visual-builder
+
+# Build scripts
+scripts
+build.ps1
+fix-project-structure.ps1
+
+# Documentation (keep README.md, remove dev docs)
+PLAN.md
+PROJECT.md
+CHANGELOG.md
+INSTALL.md
+
+# Tests
+tests
+phpunit.xml
+.phpunit.result.cache
+
+# IDE
+.vscode
+.idea
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and temp
+*.log
+*.tmp
+*.temp
+debug.log
+error_log
+
+# Other
+autoload.php

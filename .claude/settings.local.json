@@ -1,0 +1,22 @@
+﻿{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"e:\\\\ElyseVIPSTuff\\\\linkhub\\\\visual-builder\\\\src\\\\link-image\"\" && ls -la \"e:ElyseVIPSTufflinkhubvisual-buildersrclink-title\"\")",
+      "Bash(dir:*)",
+      "Bash(npm run build:*)",
+      "Bash(xcopy:*)",
+      "Bash(powershell:*)",
+      "Bash(copy \"e:\\\\ElyseVIPSTuff\\\\linkhub\\\\includes\\\\Modules\\\\TreeOfLinksModules.php\" \"E:\\\\laragon\\\\www\\\\elysehofer\\\\wp-content\\\\plugins\\\\linkhub\\\\includes\\\\Modules\\\\TreeOfLinksModules.php\")",
+      "Bash(copy \"e:\\\\ElyseVIPSTuff\\\\linkhub\\\\visual-builder\\\\build\\\\linkhub.js\" \"E:\\\\laragon\\\\www\\\\elysehofer\\\\wp-content\\\\plugins\\\\linkhub\\\\visual-builder\\\\build\\\\linkhub.js\")",
+      "Bash(copy:*)",
+      "Read(//e/laragon/www/elysehofer/wp-content/themes/Divi/**)",
+      "Bash(robocopy:*)",
+      "Bash(cmd /c \"robocopy e:\\\\ElyseVIPSTuff\\\\linkhub E:\\\\laragon\\\\www\\\\elysehofer\\\\wp-content\\\\plugins\\\\linkhub /E /XD node_modules .git\")",
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(cmd /c \"robocopy E:\\\\ElyseVIPSTuff\\\\linkhub C:\\\\laragon\\\\www\\\\developer\\\\wp-content\\\\plugins\\\\linkhub /E /XF nul\")",
+      "Bash(cmd /c \"xcopy E:\\\\ElyseVIPSTuff\\\\linkhub E:\\\\laragon\\\\www\\\\elysehofer\\\\wp-content\\\\plugins\\\\linkhub /E /Y /I\")",
+      "Bash(unzip:*)"
+    ]
+  }
+}

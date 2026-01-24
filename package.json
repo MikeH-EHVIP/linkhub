@@ -1,0 +1,36 @@
+﻿{
+  "name": "@elysevipatd/linkhub",
+  "version": "0.1.0",
+  "description": "Create beautiful link-in-bio pages for WordPress with CPT-based link management and click tracking",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "keywords": [
+    "wordpress",
+    "linktree",
+    "links",
+    "link-in-bio"
+  ],
+  "author": "ElyseVIP",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.32.0",
+    "ts-loader": "^9.4.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

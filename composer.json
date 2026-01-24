@@ -1,0 +1,24 @@
+﻿{
+  "name": "elysevipatd/linkhub",
+  "description": "Create beautiful link-in-bio pages for WordPress with CPT-based link management and click tracking",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "ElyseVIP",
+      "email": "hello@elysevipatd.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "ElyseVIP\\LinkHub\\": "includes/"
+    }
+  },
+  "config": {
+    "sort-packages": true,
+    "optimize-autoloader": true
+  }
+}
