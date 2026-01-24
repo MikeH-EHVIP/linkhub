@@ -7,9 +7,11 @@ Create beautiful link-in-bio pages for WordPress with CPT-based link management 
 - **Custom Post Types**: Separate Trees and Links for maximum flexibility
 - **Click Tracking**: Built-in redirection engine with click count analytics
 - **Display Styles**: Bar (button), Card (image card), and Heading (text divider) styles
+- **Inline Headings**: Add section headings directly in the tree builder
 - **Tree Customization**: Profile header image, about text, and social links bar
+- **Visual Interface**: Thumbnails for links, drag-and-drop ordering, insert-at-position functionality
 - **Performance Optimized**: Clean, efficient code with minimal overhead
-- **Admin UI**: Intuitive drag-and-drop interface for managing link order
+- **Admin UI**: Intuitive interface for managing link order with visual feedback
 
 ## Installation
 
@@ -52,9 +54,12 @@ Create beautiful link-in-bio pages for WordPress with CPT-based link management 
    - **About Text**: Short bio or description
    - **Social Links**: Add social media icons with URLs
    - **Styling**: Background colors, hero image shape, colors
-3. Use the **Link Tree Items** meta box to select and order links
-4. Drag and drop to reorder
-5. Publish the tree
+3. Use the **Link Tree Items** meta box to:
+   - Select and add links from the dropdown
+   - Add headings to organize sections (small, medium, or large)
+   - Use "Insert here" buttons to add items at specific positions
+   - Drag and drop to reorder
+4. Publish the tree
 
 ### Displaying Trees
 

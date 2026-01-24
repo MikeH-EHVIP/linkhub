@@ -88,6 +88,19 @@ Three built-in styles for rendering links:
 
 All styles support customizable background and text colors per link.
 
+### Inline Headings
+Add section headings directly in the Tree builder without creating separate Link CPT items:
+- Three sizes: small, medium, large
+- Edit text and size inline
+- Drag-and-drop ordering with links
+- Insert headings at specific positions
+
+### Tree Builder Interface
+- Image thumbnails for all links
+- "Insert here" buttons for adding items at specific positions
+- Drag-and-drop reordering
+- Visual distinction between links and headings
+
 ### Tree Page Styling Options
 Each Tree can be customized with:
 - **Background Color**: Solid color page background

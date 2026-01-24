@@ -7,23 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-01-23
+
 ### Added
-- Tree header image field for profile picture/logo
-- Tree about text field for bio/description
-- Tree social links bar with platform icons (Twitter/X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, GitHub, Email, Website)
-- Link Type Design post type for custom link templates
-- Design-only Divi 5 modules: Link Title, Link Image, Link Icon
-- LinkTypeRenderer for rendering links with custom designs
-- TreeRenderer for frontend tree display
-- Frontend CSS styles for tree pages
+- Inline heading support in Tree builder (no separate Link CPT needed)
+- Image thumbnails for links in Tree builder interface
+- "Insert here" functionality to add links/headings at specific positions
+- Three heading sizes: small, medium, large
+- Improved admin UI with visual distinction for headings
+- Hover-activated insert buttons for better UX
 
 ### Changed
-- Trees now display via their permalink URL using TreeRenderer
-- Links can be assigned a Link Type Design for custom appearance
-- Trees can override Link Type Design per-link
+- Tree items now support mixed array of links and headings
+- Updated save/render logic to handle inline headings
+- Enhanced drag-and-drop interface with better visual feedback
 
 ### Removed
-- Tree Display Divi module (use Theme Builder templates instead)
+- All Divi 5 dependencies and modules
+- Link Type Design post type (free version only)
+- Visual Builder integration
 
 ## [0.1.0] - 2026-01-19
 
