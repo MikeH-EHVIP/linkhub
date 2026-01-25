@@ -1,11 +1,11 @@
-﻿<?php
+<?php
 /**
  * LinkHub - Module Server Renderers
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
-namespace ElyseVIP\LinkHub\Modules;
+namespace LinkHub\Modules;
 
 use ET\Builder\Framework\DependencyManagement\Interfaces\DependencyInterface;
 use ET\Builder\Framework\Utility\HTMLUtility;
@@ -13,8 +13,8 @@ use ET\Builder\FrontEnd\Module\Style;
 use ET\Builder\Packages\Module\Module;
 use ET\Builder\Packages\Module\Options\Element\ElementClassnames;
 use ET\Builder\Packages\ModuleLibrary\ModuleRegistration;
-use ElyseVIP\LinkHub\PostTypes\LinkPostType;
-use ElyseVIP\LinkHub\Tracking\RedirectHandler;
+use LinkHub\PostTypes\LinkPostType;
+use LinkHub\Tracking\RedirectHandler;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -36,7 +36,7 @@ class TreeOfLinksModules implements DependencyInterface {
      * Register all Tree of Links modules
      */
     public function register_modules() {
-        $log_file = LH_PLUGIN_DIR . 'dtol-debug.log';
+        $log_file = LH_PLUGIN_DIR . 'lh-debug.log';
         $timestamp = date('Y-m-d H:i:s');
         file_put_contents($log_file, "[{$timestamp}] register_modules() called\n", FILE_APPEND);
         
@@ -162,7 +162,7 @@ class TreeOfLinksModules implements DependencyInterface {
 
         $title_html = HTMLUtility::render([
             'tag' => $html_tag,
-            'attributes' => ['class' => 'dtol-link-title'],
+            'attributes' => ['class' => 'lh-link-title'],
             'childrenSanitizer' => 'esc_html',
             'children' => $title,
         ]);
@@ -239,7 +239,7 @@ class TreeOfLinksModules implements DependencyInterface {
 
         $description_html = HTMLUtility::render([
             'tag' => 'div',
-            'attributes' => ['class' => 'dtol-link-description'],
+            'attributes' => ['class' => 'lh-link-description'],
             'childrenSanitizer' => 'et_core_esc_previously',
             'children' => $description,
         ]);
@@ -322,7 +322,7 @@ class TreeOfLinksModules implements DependencyInterface {
         // Wrap image in a container div for proper border-radius clipping
         $image_wrapper = HTMLUtility::render([
             'tag' => 'div',
-            'attributes' => ['class' => 'dtol-link-image'],
+            'attributes' => ['class' => 'lh-link-image'],
             'childrenSanitizer' => 'et_core_esc_previously',
             'children' => $img_tag,
         ]);
@@ -393,7 +393,7 @@ class TreeOfLinksModules implements DependencyInterface {
         $link_id = self::get_link_id();
         $data = self::get_link_data($link_id);
 
-        $icon_html = '🔗';
+        $icon_html = '??';
         if ($data && !empty($data['icon'])) {
             // Icon is stored as a simple string (emoji or icon class)
             $icon_html = esc_html($data['icon']);
@@ -401,7 +401,7 @@ class TreeOfLinksModules implements DependencyInterface {
 
         $icon_wrapped = HTMLUtility::render([
             'tag' => 'span',
-            'attributes' => ['class' => 'dtol-link-icon'],
+            'attributes' => ['class' => 'lh-link-icon'],
             'childrenSanitizer' => 'et_core_esc_previously',
             'children' => $icon_html,
         ]);
@@ -466,3 +466,4 @@ class TreeOfLinksModules implements DependencyInterface {
         ]);
     }
 }
+

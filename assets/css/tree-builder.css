@@ -1,0 +1,1036 @@
+/**
+ * LinkHub Tree Builder Admin UI Styles
+ */
+
+/* ============================================
+   CSS Variables
+   ============================================ */
+:root {
+    --lh-primary: #2271b1;
+    --lh-primary-hover: #135e96;
+    --lh-secondary: #f0f0f1;
+    --lh-secondary-hover: #e0e0e0;
+    --lh-danger: #d63638;
+    --lh-danger-hover: #b32d2e;
+    --lh-success: #00a32a;
+    --lh-border: #c3c4c7;
+    --lh-border-light: #e0e0e0;
+    --lh-text: #1d2327;
+    --lh-text-light: #50575e;
+    --lh-bg: #f0f0f1;
+    --lh-white: #ffffff;
+    --lh-sidebar-width: 260px;
+    --lh-preview-width: 380px;
+    --lh-radius: 8px;
+    --lh-radius-small: 4px;
+    --lh-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --lh-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   Reset & Base
+   ============================================ */
+.lh-tree-builder-wrap {
+    margin: 0;
+    padding: 0;
+}
+
+.lh-tree-builder-wrap * {
+    box-sizing: border-box;
+}
+
+/* ============================================
+   Main Layout - Three Panel Grid
+   ============================================ */
+.lh-tree-builder {
+    display: grid;
+    grid-template-columns: var(--lh-sidebar-width) 1fr var(--lh-preview-width);
+    height: calc(100vh - 32px); /* Account for admin bar */
+    margin-left: -20px;
+    margin-right: 0;
+    background: var(--lh-bg);
+}
+
+@media (max-width: 1400px) {
+    .lh-tree-builder {
+        --lh-sidebar-width: 240px;
+        --lh-preview-width: 320px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .lh-tree-builder {
+        grid-template-columns: var(--lh-sidebar-width) 1fr;
+    }
+    .lh-builder-preview {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .lh-tree-builder {
+        grid-template-columns: 1fr;
+    }
+    .lh-builder-sidebar {
+        display: none;
+    }
+}
+
+/* ============================================
+   Sidebar
+   ============================================ */
+.lh-builder-sidebar {
+    background: var(--lh-white);
+    border-right: 1px solid var(--lh-border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.lh-sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--lh-border-light);
+}
+
+.lh-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.lh-sidebar-header h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--lh-text-light);
+    letter-spacing: 0.5px;
+}
+
+/* Tree List */
+.lh-tree-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lh-tree-list li {
+    margin-bottom: 4px;
+}
+
+.lh-tree-list li a,
+.lh-tree-list li button {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    border: none;
+    background: none;
+    border-radius: var(--lh-radius-small);
+    color: var(--lh-text);
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.lh-tree-list li a:hover,
+.lh-tree-list li button:hover {
+    background: var(--lh-secondary);
+}
+
+.lh-tree-list li.active a,
+.lh-tree-list li.active button {
+    background: var(--lh-primary);
+    color: var(--lh-white);
+}
+
+.lh-tree-list .lh-loading {
+    color: var(--lh-text-light);
+    font-style: italic;
+    padding: 10px 12px;
+}
+
+/* Navigation List */
+.lh-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lh-nav-list li a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    color: var(--lh-text);
+    text-decoration: none;
+    border-radius: var(--lh-radius-small);
+    font-size: 14px;
+    transition: background 0.15s;
+}
+
+.lh-nav-list li a:hover {
+    background: var(--lh-secondary);
+}
+
+.lh-nav-list .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Settings Nav List */
+.lh-tree-settings-nav h3 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--lh-text-light);
+    letter-spacing: 0.5px;
+}
+
+.lh-settings-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lh-settings-nav-list li {
+    margin-bottom: 2px;
+}
+
+.lh-settings-nav-list button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    border: none;
+    background: none;
+    border-radius: var(--lh-radius-small);
+    color: var(--lh-text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.lh-settings-nav-list button:hover {
+    background: var(--lh-secondary);
+}
+
+.lh-settings-nav-list li.active button {
+    background: var(--lh-primary);
+    color: var(--lh-white);
+}
+
+.lh-settings-nav-list .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* ============================================
+   Main Content Area
+   ============================================ */
+.lh-builder-main {
+    background: var(--lh-bg);
+    overflow-y: auto;
+    padding: 24px;
+}
+
+/* Empty State */
+.lh-builder-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.lh-empty-state {
+    text-align: center;
+    padding: 40px;
+}
+
+.lh-empty-state .dashicons {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--lh-border);
+    margin-bottom: 16px;
+}
+
+.lh-empty-state h2 {
+    margin: 0 0 8px;
+    color: var(--lh-text);
+}
+
+.lh-empty-state p {
+    margin: 0;
+    color: var(--lh-text-light);
+}
+
+/* Builder Header */
+.lh-builder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--lh-border-light);
+}
+
+.lh-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lh-header-title h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--lh-text);
+    outline: none;
+    padding: 4px 8px;
+    border-radius: var(--lh-radius-small);
+    min-width: 100px;
+}
+
+.lh-header-title h1:hover {
+    background: var(--lh-secondary);
+}
+
+.lh-header-title h1:focus {
+    background: var(--lh-white);
+    box-shadow: 0 0 0 2px var(--lh-primary);
+}
+
+.lh-status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 3px;
+    background: var(--lh-secondary);
+    color: var(--lh-text-light);
+}
+
+.lh-status-badge.publish {
+    background: #d4edda;
+    color: #155724;
+}
+
+.lh-status-badge.draft {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.lh-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lh-save-status {
+    font-size: 13px;
+    color: var(--lh-text-light);
+}
+
+.lh-save-status.saving {
+    color: var(--lh-primary);
+}
+
+.lh-save-status.saved {
+    color: var(--lh-success);
+}
+
+.lh-save-status.error {
+    color: var(--lh-danger);
+}
+
+/* ============================================
+   Views
+   ============================================ */
+.lh-view {
+    animation: lh-fade-in 0.15s ease-out;
+}
+
+@keyframes lh-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.lh-view-header {
+    margin-bottom: 20px;
+}
+
+.lh-view-header h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--lh-text);
+}
+
+.lh-view-description {
+    margin: 0;
+    color: var(--lh-text-light);
+    font-size: 14px;
+}
+
+/* Settings Form (used in profile, social, appearance, display views) */
+.lh-settings-form {
+    background: var(--lh-white);
+    border: 1px solid var(--lh-border-light);
+    border-radius: var(--lh-radius);
+    padding: 24px;
+    max-width: 700px;
+}
+
+.lh-settings-section-title {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--lh-text);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--lh-border-light);
+}
+
+/* Add Buttons */
+.lh-add-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* ============================================
+   Link Cards
+   ============================================ */
+.lh-links-container {
+    margin-bottom: 24px;
+}
+
+.lh-link-card {
+    background: var(--lh-white);
+    border: 1px solid var(--lh-border-light);
+    border-radius: var(--lh-radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: grab;
+    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.lh-link-card:hover {
+    border-color: var(--lh-border);
+    box-shadow: var(--lh-shadow-hover);
+}
+
+.lh-link-card.dragging {
+    opacity: 0.9;
+    transform: rotate(1deg);
+    box-shadow: var(--lh-shadow-hover);
+}
+
+.lh-link-card.drag-over {
+    border-color: var(--lh-primary);
+    border-style: dashed;
+}
+
+/* Drag Handle */
+.lh-drag-handle {
+    color: var(--lh-border);
+    cursor: grab;
+    flex-shrink: 0;
+}
+
+.lh-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Card Thumbnail */
+.lh-card-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--lh-radius-small);
+    background: var(--lh-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.lh-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.lh-card-thumb .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: var(--lh-text-light);
+}
+
+/* Card Info */
+.lh-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.lh-card-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--lh-text);
+    margin-bottom: 4px;
+    outline: none;
+    border-radius: var(--lh-radius-small);
+    padding: 2px 4px;
+    margin: -2px -4px 2px;
+}
+
+.lh-card-title:hover {
+    background: var(--lh-secondary);
+}
+
+.lh-card-title:focus {
+    background: var(--lh-white);
+    box-shadow: 0 0 0 2px var(--lh-primary);
+}
+
+.lh-card-url {
+    font-size: 13px;
+    color: var(--lh-text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lh-card-meta {
+    font-size: 12px;
+    color: var(--lh-text-light);
+}
+
+/* Card Stats */
+.lh-card-stats {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--lh-text-light);
+    flex-shrink: 0;
+    padding: 4px 8px;
+    background: var(--lh-secondary);
+    border-radius: var(--lh-radius-small);
+}
+
+.lh-card-stats .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Card Actions */
+.lh-card-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.lh-card-actions button {
+    padding: 6px;
+    border: none;
+    background: none;
+    border-radius: var(--lh-radius-small);
+    cursor: pointer;
+    color: var(--lh-text-light);
+    transition: background 0.15s, color 0.15s;
+}
+
+.lh-card-actions button:hover {
+    background: var(--lh-secondary);
+    color: var(--lh-text);
+}
+
+.lh-card-actions .lh-remove-btn:hover {
+    background: #fef2f2;
+    color: var(--lh-danger);
+}
+
+/* Heading Card */
+.lh-heading-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-left: 3px solid var(--lh-primary);
+}
+
+.lh-heading-card .lh-heading-icon {
+    color: var(--lh-primary);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+/* ============================================
+   Settings Panel
+   ============================================ */
+.lh-settings-panel {
+    background: var(--lh-white);
+    border: 1px solid var(--lh-border-light);
+    border-radius: var(--lh-radius);
+    overflow: hidden;
+}
+
+.lh-settings-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    background: var(--lh-secondary);
+    border-bottom: 1px solid var(--lh-border-light);
+}
+
+.lh-settings-title .dashicons {
+    color: var(--lh-text-light);
+}
+
+/* Accordion */
+.lh-accordion {
+    border-bottom: 1px solid var(--lh-border-light);
+}
+
+.lh-accordion:last-child {
+    border-bottom: none;
+}
+
+.lh-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 14px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--lh-text);
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.lh-accordion-header:hover {
+    background: var(--lh-bg);
+}
+
+.lh-accordion-header .dashicons {
+    transition: transform 0.2s;
+}
+
+.lh-accordion.open .lh-accordion-header .dashicons {
+    transform: rotate(180deg);
+}
+
+.lh-accordion-content {
+    display: none;
+    padding: 16px 20px;
+    border-top: 1px solid var(--lh-border-light);
+    background: var(--lh-bg);
+}
+
+.lh-accordion.open .lh-accordion-content {
+    display: block;
+}
+
+/* ============================================
+   Preview Panel
+   ============================================ */
+.lh-builder-preview {
+    background: #2c2c2c;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+}
+
+.lh-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.lh-preview-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.lh-preview-header .lh-btn {
+    background: #444;
+    border-color: #555;
+    color: #fff;
+}
+
+.lh-preview-header .lh-btn:hover {
+    background: #555;
+}
+
+/* Device Frame */
+.lh-preview-device {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+.lh-device-frame {
+    width: 100%;
+    max-width: 320px;
+    height: calc(100% - 20px);
+    background: #1a1a1a;
+    border-radius: 32px;
+    padding: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.lh-device-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 24px;
+    background: #ffffff;
+}
+
+/* ============================================
+   Forms
+   ============================================ */
+.lh-form-group {
+    margin-bottom: 16px;
+}
+
+.lh-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.lh-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--lh-text);
+}
+
+.lh-form-group input[type="text"],
+.lh-form-group input[type="url"],
+.lh-form-group input[type="email"],
+.lh-form-group textarea,
+.lh-form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--lh-border);
+    border-radius: var(--lh-radius-small);
+    font-size: 14px;
+    color: var(--lh-text);
+    background: var(--lh-white);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lh-form-group input:focus,
+.lh-form-group textarea:focus,
+.lh-form-group select:focus {
+    outline: none;
+    border-color: var(--lh-primary);
+    box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.2);
+}
+
+.lh-form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.lh-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.lh-form-group-inline label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.lh-form-group-inline input[type="checkbox"] {
+    width: auto;
+}
+
+/* Image Upload */
+.lh-image-upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lh-image-preview {
+    width: 64px;
+    height: 64px;
+    border: 2px dashed var(--lh-border);
+    border-radius: var(--lh-radius-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--lh-secondary);
+}
+
+.lh-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.lh-image-preview.has-image {
+    border-style: solid;
+}
+
+/* Social Links */
+.lh-social-links-list {
+    margin-bottom: 12px;
+}
+
+.lh-social-link-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.lh-social-link-row select {
+    width: 140px;
+    flex-shrink: 0;
+}
+
+.lh-social-link-row input {
+    flex: 1;
+}
+
+.lh-social-link-row .lh-remove-social {
+    padding: 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--lh-text-light);
+    border-radius: var(--lh-radius-small);
+}
+
+.lh-social-link-row .lh-remove-social:hover {
+    background: #fef2f2;
+    color: var(--lh-danger);
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.lh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--lh-radius-small);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+
+.lh-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.lh-btn-primary {
+    background: var(--lh-primary);
+    color: var(--lh-white);
+    border-color: var(--lh-primary);
+}
+
+.lh-btn-primary:hover {
+    background: var(--lh-primary-hover);
+    border-color: var(--lh-primary-hover);
+    color: var(--lh-white);
+}
+
+.lh-btn-secondary {
+    background: var(--lh-white);
+    color: var(--lh-text);
+    border-color: var(--lh-border);
+}
+
+.lh-btn-secondary:hover {
+    background: var(--lh-secondary);
+    color: var(--lh-text);
+}
+
+.lh-btn-danger {
+    background: var(--lh-white);
+    color: var(--lh-danger);
+    border-color: var(--lh-danger);
+}
+
+.lh-btn-danger:hover {
+    background: var(--lh-danger);
+    color: var(--lh-white);
+}
+
+.lh-btn-small {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
+.lh-btn-small .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+
+/* ============================================
+   Modals
+   ============================================ */
+.lh-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100100;
+}
+
+.lh-modal.open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lh-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.lh-modal-content {
+    position: relative;
+    background: var(--lh-white);
+    border-radius: var(--lh-radius);
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.lh-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--lh-border-light);
+}
+
+.lh-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.lh-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--lh-text-light);
+    padding: 0;
+    line-height: 1;
+}
+
+.lh-modal-close:hover {
+    color: var(--lh-text);
+}
+
+.lh-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(90vh - 130px);
+}
+
+.lh-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--lh-border-light);
+    background: var(--lh-secondary);
+}
+
+/* ============================================
+   WordPress Color Picker Adjustments
+   ============================================ */
+.lh-color-picker {
+    width: auto !important;
+}
+
+.wp-picker-container {
+    display: flex;
+    align-items: center;
+}
+
+.wp-picker-container .wp-color-result {
+    margin-right: 8px;
+}
+
+/* ============================================
+   Utilities
+   ============================================ */
+.lh-hidden {
+    display: none !important;
+}
+
+.lh-loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--lh-border);
+    border-radius: 50%;
+    border-top-color: var(--lh-primary);
+    animation: lh-spin 0.8s linear infinite;
+}
+
+@keyframes lh-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

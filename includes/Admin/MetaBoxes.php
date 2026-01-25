@@ -1,14 +1,14 @@
-﻿<?php
+<?php
 /**
  * Admin Meta Boxes
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
-namespace ElyseVIP\LinkHub\Admin;
+namespace LinkHub\Admin;
 
-use ElyseVIP\LinkHub\PostTypes\TreePostType;
-use ElyseVIP\LinkHub\PostTypes\LinkPostType;
+use LinkHub\PostTypes\TreePostType;
+use LinkHub\PostTypes\LinkPostType;
 
 /**
  * Meta Boxes Class
@@ -118,9 +118,9 @@ class MetaBoxes {
         ]);
         
         ?>
-        <div id="dtol-tree-links-manager">
-            <div class="dtol-links-toolbar">
-                <select id="dtol-add-link-select" style="min-width: 300px;">
+        <div id="lh-tree-links-manager">
+            <div class="lh-links-toolbar">
+                <select id="lh-add-link-select" style="min-width: 300px;">
                     <option value=""><?php _e('Select a link to add...', 'linkhub'); ?></option>
                     <?php foreach ($available_links as $link): ?>
                         <option value="<?php echo esc_attr($link->ID); ?>">
@@ -128,10 +128,10 @@ class MetaBoxes {
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <button type="button" id="dtol-add-link-btn" class="button">
+                <button type="button" id="lh-add-link-btn" class="button">
                     <?php _e('Add Link', 'linkhub'); ?>
                 </button>
-                <button type="button" id="dtol-add-heading-btn" class="button">
+                <button type="button" id="lh-add-heading-btn" class="button">
                     <?php _e('Add Heading', 'linkhub'); ?>
                 </button>
                 <a href="<?php echo admin_url('post-new.php?post_type=' . LinkPostType::POST_TYPE); ?>" 
@@ -140,34 +140,34 @@ class MetaBoxes {
                 </a>
             </div>
             
-            <ul id="dtol-selected-links" class="dtol-links-list">
+            <ul id="lh-selected-links" class="lh-links-list">
                 <?php foreach ($tree_links as $tree_link): 
                     // Check if it's a heading
                     if (is_array($tree_link) && isset($tree_link['type']) && $tree_link['type'] === 'heading'):
                         $heading_text = isset($tree_link['text']) ? $tree_link['text'] : '';
                         $heading_size = isset($tree_link['size']) ? $tree_link['size'] : 'medium';
                 ?>
-                    <li class="dtol-link-item dtol-heading-item" data-type="heading">
-                        <span class="dtol-drag-handle dashicons dashicons-menu"></span>
-                        <div class="dtol-link-info">
+                    <li class="lh-link-item lh-heading-item" data-type="heading">
+                        <span class="lh-drag-handle dashicons dashicons-menu"></span>
+                        <div class="lh-link-info">
                             <span class="dashicons dashicons-editor-textcolor" style="color: #999;"></span>
                             <strong><?php _e('Heading:', 'linkhub'); ?> <?php echo esc_html($heading_text); ?></strong>
-                            <span class="dtol-link-meta"><?php printf(__('Size: %s', 'linkhub'), $heading_size); ?></span>
+                            <span class="lh-link-meta"><?php printf(__('Size: %s', 'linkhub'), $heading_size); ?></span>
                         </div>
-                        <div class="dtol-link-actions">
-                            <button type="button" class="button button-small dtol-edit-heading">
+                        <div class="lh-link-actions">
+                            <button type="button" class="button button-small lh-edit-heading">
                                 <?php _e('Edit', 'linkhub'); ?>
                             </button>
-                            <button type="button" class="button button-small dtol-remove-link">
+                            <button type="button" class="button button-small lh-remove-link">
                                 <?php _e('Remove', 'linkhub'); ?>
                             </button>
                         </div>
-                        <button type="button" class="dtol-insert-here button button-small" title="<?php _e('Insert item here', 'linkhub'); ?>">
+                        <button type="button" class="lh-insert-here button button-small" title="<?php _e('Insert item here', 'linkhub'); ?>">
                             <span class="dashicons dashicons-plus-alt"></span>
                         </button>
-                        <input type="hidden" class="dtol-item-type" name="LH_tree_items[type][]" value="heading">
-                        <input type="hidden" class="dtol-heading-text" name="LH_tree_items[text][]" value="<?php echo esc_attr($heading_text); ?>">
-                        <input type="hidden" class="dtol-heading-size" name="LH_tree_items[size][]" value="<?php echo esc_attr($heading_size); ?>">
+                        <input type="hidden" class="lh-item-type" name="LH_tree_items[type][]" value="heading">
+                        <input type="hidden" class="lh-heading-text" name="LH_tree_items[text][]" value="<?php echo esc_attr($heading_text); ?>">
+                        <input type="hidden" class="lh-heading-size" name="LH_tree_items[size][]" value="<?php echo esc_attr($heading_size); ?>">
                     </li>
                 <?php else:
                     // It's a link
@@ -184,48 +184,48 @@ class MetaBoxes {
                         $thumbnail = wp_get_attachment_image_url($image_id, 'thumbnail');
                     }
                 ?>
-                    <li class="dtol-link-item" data-link-id="<?php echo esc_attr($link_id); ?>" data-type="link">
-                        <span class="dtol-drag-handle dashicons dashicons-menu"></span>
+                    <li class="lh-link-item" data-link-id="<?php echo esc_attr($link_id); ?>" data-type="link">
+                        <span class="lh-drag-handle dashicons dashicons-menu"></span>
                         <?php if ($thumbnail): ?>
-                            <img src="<?php echo esc_url($thumbnail); ?>" class="dtol-link-thumbnail" alt="">
+                            <img src="<?php echo esc_url($thumbnail); ?>" class="lh-link-thumbnail" alt="">
                         <?php else: ?>
-                            <span class="dtol-link-thumbnail-placeholder dashicons dashicons-admin-links"></span>
+                            <span class="lh-link-thumbnail-placeholder dashicons dashicons-admin-links"></span>
                         <?php endif; ?>
-                        <div class="dtol-link-info">
+                        <div class="lh-link-info">
                             <strong><?php echo esc_html($link->post_title); ?></strong>
-                            <span class="dtol-link-url"><?php echo esc_html($url); ?></span>
-                            <span class="dtol-link-clicks"><?php printf(__('%d clicks', 'linkhub'), $clicks); ?></span>
+                            <span class="lh-link-url"><?php echo esc_html($url); ?></span>
+                            <span class="lh-link-clicks"><?php printf(__('%d clicks', 'linkhub'), $clicks); ?></span>
                         </div>
-                        <div class="dtol-link-actions">
+                        <div class="lh-link-actions">
                             <a href="<?php echo get_edit_post_link($link_id); ?>" 
                                class="button button-small" target="_blank">
                                 <?php _e('Edit', 'linkhub'); ?>
                             </a>
-                            <button type="button" class="button button-small dtol-remove-link">
+                            <button type="button" class="button button-small lh-remove-link">
                                 <?php _e('Remove', 'linkhub'); ?>
                             </button>
                         </div>
-                        <button type="button" class="dtol-insert-here button button-small" title="<?php _e('Insert item here', 'linkhub'); ?>">
+                        <button type="button" class="lh-insert-here button button-small" title="<?php _e('Insert item here', 'linkhub'); ?>">
                             <span class="dashicons dashicons-plus-alt"></span>
                         </button>
-                        <input type="hidden" class="dtol-item-type" name="LH_tree_items[type][]" value="link">
-                        <input type="hidden" class="dtol-link-id-input" name="LH_tree_items[link_id][]" value="<?php echo esc_attr($link_id); ?>">
+                        <input type="hidden" class="lh-item-type" name="LH_tree_items[type][]" value="link">
+                        <input type="hidden" class="lh-link-id-input" name="LH_tree_items[link_id][]" value="<?php echo esc_attr($link_id); ?>">
                     </li>
                 <?php endif; endforeach; ?>
             </ul>
             
             <?php if (empty($tree_links)): ?>
-                <p class="dtol-empty-message">
+                <p class="lh-empty-message">
                     <?php _e('No links added yet. Select a link above to get started.', 'linkhub'); ?>
                 </p>
             <?php endif; ?>
         </div>
         
         <style>
-            .dtol-links-toolbar { margin-bottom: 15px; }
-            .dtol-links-toolbar select { margin-right: 5px; }
-            .dtol-links-list { list-style: none; margin: 0; padding: 0; }
-            .dtol-link-item { 
+            .lh-links-toolbar { margin-bottom: 15px; }
+            .lh-links-toolbar select { margin-right: 5px; }
+            .lh-links-list { list-style: none; margin: 0; padding: 0; }
+            .lh-link-item { 
                 background: #f9f9f9; 
                 border: 1px solid #ddd; 
                 padding: 12px; 
@@ -235,9 +235,9 @@ class MetaBoxes {
                 cursor: move;
                 position: relative;
             }
-            .dtol-heading-item { background: #fff9e6; border-left: 4px solid #f0b849; }
-            .dtol-drag-handle { margin-right: 10px; color: #999; cursor: grab; flex-shrink: 0; }
-            .dtol-link-thumbnail { 
+            .lh-heading-item { background: #fff9e6; border-left: 4px solid #f0b849; }
+            .lh-drag-handle { margin-right: 10px; color: #999; cursor: grab; flex-shrink: 0; }
+            .lh-link-thumbnail { 
                 width: 50px; 
                 height: 50px; 
                 object-fit: cover; 
@@ -245,7 +245,7 @@ class MetaBoxes {
                 margin-right: 12px;
                 flex-shrink: 0;
             }
-            .dtol-link-thumbnail-placeholder {
+            .lh-link-thumbnail-placeholder {
                 width: 50px;
                 height: 50px;
                 display: flex;
@@ -258,16 +258,16 @@ class MetaBoxes {
                 font-size: 28px;
                 flex-shrink: 0;
             }
-            .dtol-link-info { flex: 1; min-width: 0; }
-            .dtol-link-info strong { display: block; margin-bottom: 4px; }
-            .dtol-link-url, .dtol-link-clicks, .dtol-link-meta { 
+            .lh-link-info { flex: 1; min-width: 0; }
+            .lh-link-info strong { display: block; margin-bottom: 4px; }
+            .lh-link-url, .lh-link-clicks, .lh-link-meta { 
                 font-size: 12px; 
                 color: #666; 
                 margin-right: 15px; 
                 display: inline-block;
             }
-            .dtol-link-actions { display: flex; gap: 5px; flex-shrink: 0; }
-            .dtol-insert-here {
+            .lh-link-actions { display: flex; gap: 5px; flex-shrink: 0; }
+            .lh-insert-here {
                 position: absolute;
                 top: -12px;
                 left: 50%;
@@ -282,15 +282,15 @@ class MetaBoxes {
                 color: white !important;
                 border-color: #2271b1 !important;
             }
-            .dtol-insert-here .dashicons {
+            .lh-insert-here .dashicons {
                 font-size: 14px;
                 width: 14px;
                 height: 14px;
             }
-            .dtol-link-item:hover .dtol-insert-here {
+            .lh-link-item:hover .lh-insert-here {
                 opacity: 1;
             }
-            .dtol-empty-message { 
+            .lh-empty-message { 
                 padding: 20px; 
                 text-align: center; 
                 background: #f9f9f9; 
@@ -323,6 +323,10 @@ class MetaBoxes {
         $bio_color = get_post_meta($post->ID, TreePostType::META_BIO_COLOR, true) ?: '#555555';
         $social_style = get_post_meta($post->ID, TreePostType::META_SOCIAL_STYLE, true) ?: 'circle';
         $social_color = get_post_meta($post->ID, TreePostType::META_SOCIAL_COLOR, true) ?: '#333333';
+        $link_background_color = get_post_meta($post->ID, TreePostType::META_LINK_BACKGROUND_COLOR, true) ?: '#eeeeee';
+        $link_text_color = get_post_meta($post->ID, TreePostType::META_LINK_TEXT_COLOR, true) ?: '#000000';
+        $title_font = get_post_meta($post->ID, TreePostType::META_TITLE_FONT, true) ?: 'system';
+        $body_font = get_post_meta($post->ID, TreePostType::META_BODY_FONT, true) ?: 'system';
         $heading_size = get_post_meta($post->ID, TreePostType::META_HEADING_SIZE, true) ?: 'medium';
 
         if (!is_array($social_links)) {
@@ -350,19 +354,19 @@ class MetaBoxes {
                     <label for="LH_header_image"><?php _e('Header Image', 'linkhub'); ?></label>
                 </th>
                 <td>
-                    <div class="dtol-header-image-upload">
+                    <div class="lh-header-image-upload">
                         <input type="hidden" id="LH_header_image_id" name="LH_header_image_id"
                                value="<?php echo esc_attr($header_image_id); ?>">
-                        <div class="dtol-header-image-preview" style="margin-bottom: 10px;">
+                        <div class="lh-header-image-preview" style="margin-bottom: 10px;">
                             <?php if ($header_image_id):
                                 echo wp_get_attachment_image($header_image_id, 'medium');
                             endif; ?>
                         </div>
-                        <button type="button" class="button dtol-upload-header-image">
+                        <button type="button" class="button lh-upload-header-image">
                             <?php echo $header_image_id ? __('Change Image', 'linkhub') : __('Upload Image', 'linkhub'); ?>
                         </button>
                         <?php if ($header_image_id): ?>
-                            <button type="button" class="button dtol-remove-header-image">
+                            <button type="button" class="button lh-remove-header-image">
                                 <?php _e('Remove', 'linkhub'); ?>
                             </button>
                         <?php endif; ?>
@@ -389,9 +393,9 @@ class MetaBoxes {
                     <label><?php _e('Social Links', 'linkhub'); ?></label>
                 </th>
                 <td>
-                    <div id="dtol-social-links-container">
+                    <div id="lh-social-links-container">
                         <?php foreach ($social_links as $index => $social): ?>
-                            <div class="dtol-social-link-row" style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center;">
+                            <div class="lh-social-link-row" style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center;">
                                 <select name="LH_social_platform[]" style="width: 150px;">
                                     <?php foreach ($platforms as $key => $platform): ?>
                                         <option value="<?php echo esc_attr($key); ?>" <?php selected($social['platform'], $key); ?>>
@@ -403,13 +407,13 @@ class MetaBoxes {
                                        value="<?php echo esc_attr($social['url']); ?>"
                                        placeholder="<?php _e('URL', 'linkhub'); ?>"
                                        class="regular-text">
-                                <button type="button" class="button dtol-remove-social-link">
+                                <button type="button" class="button lh-remove-social-link">
                                     <span class="dashicons dashicons-no-alt"></span>
                                 </button>
                             </div>
                         <?php endforeach; ?>
                     </div>
-                    <button type="button" class="button dtol-add-social-link" style="margin-top: 10px;">
+                    <button type="button" class="button lh-add-social-link" style="margin-top: 10px;">
                         <?php _e('Add Social Link', 'linkhub'); ?>
                     </button>
                     <p class="description">
@@ -430,7 +434,7 @@ class MetaBoxes {
                 <td>
                     <input type="text" id="LH_background_color" name="LH_background_color"
                            value="<?php echo esc_attr($background_color); ?>"
-                           class="dtol-color-picker" data-default-color="#8b8178">
+                           class="lh-color-picker" data-default-color="#8b8178">
                     <p class="description">
                         <?php _e('Outer page background color (visible on desktop sides).', 'linkhub'); ?>
                     </p>
@@ -443,7 +447,7 @@ class MetaBoxes {
                 <td>
                     <input type="text" id="LH_tree_background_color" name="LH_tree_background_color"
                            value="<?php echo esc_attr($tree_background_color); ?>"
-                           class="dtol-color-picker" data-default-color="#f5f5f5">
+                           class="lh-color-picker" data-default-color="#f5f5f5">
                     <p class="description">
                         <?php _e('Content area background color (also used for hero fade effect).', 'linkhub'); ?>
                     </p>
@@ -454,19 +458,19 @@ class MetaBoxes {
                     <label for="LH_background_image"><?php _e('Background Image', 'linkhub'); ?></label>
                 </th>
                 <td>
-                    <div class="dtol-bg-image-upload">
+                    <div class="lh-bg-image-upload">
                         <input type="hidden" id="LH_background_image_id" name="LH_background_image_id"
                                value="<?php echo esc_attr($background_image_id); ?>">
-                        <div class="dtol-bg-image-preview" style="margin-bottom: 10px;">
+                        <div class="lh-bg-image-preview" style="margin-bottom: 10px;">
                             <?php if ($background_image_id):
                                 echo wp_get_attachment_image($background_image_id, 'thumbnail');
                             endif; ?>
                         </div>
-                        <button type="button" class="button dtol-upload-bg-image">
+                        <button type="button" class="button lh-upload-bg-image">
                             <?php echo $background_image_id ? __('Change Image', 'linkhub') : __('Upload Image', 'linkhub'); ?>
                         </button>
                         <?php if ($background_image_id): ?>
-                            <button type="button" class="button dtol-remove-bg-image">
+                            <button type="button" class="button lh-remove-bg-image">
                                 <?php _e('Remove', 'linkhub'); ?>
                             </button>
                         <?php endif; ?>
@@ -519,7 +523,7 @@ class MetaBoxes {
                 <td>
                     <input type="text" id="LH_title_color" name="LH_title_color"
                            value="<?php echo esc_attr($title_color); ?>"
-                           class="dtol-color-picker" data-default-color="#1a1a1a">
+                           class="lh-color-picker" data-default-color="#1a1a1a">
                     <p class="description">
                         <?php _e('Color for the tree name/title text.', 'linkhub'); ?>
                     </p>
@@ -532,7 +536,7 @@ class MetaBoxes {
                 <td>
                     <input type="text" id="LH_bio_color" name="LH_bio_color"
                            value="<?php echo esc_attr($bio_color); ?>"
-                           class="dtol-color-picker" data-default-color="#555555">
+                           class="lh-color-picker" data-default-color="#555555">
                     <p class="description">
                         <?php _e('Color for the about/bio text.', 'linkhub'); ?>
                     </p>
@@ -569,9 +573,107 @@ class MetaBoxes {
                 <td>
                     <input type="text" id="LH_social_color" name="LH_social_color"
                            value="<?php echo esc_attr($social_color); ?>"
-                           class="dtol-color-picker" data-default-color="#333333">
+                           class="lh-color-picker" data-default-color="#333333">
                     <p class="description">
                         <?php _e('Default color for social icons (platform colors used on hover).', 'linkhub'); ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="LH_link_background_color"><?php _e('Link Button Background', 'linkhub'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="LH_link_background_color" name="LH_link_background_color"
+                           value="<?php echo esc_attr($link_background_color); ?>"
+                           class="lh-color-picker" data-default-color="#eeeeee">
+                    <p class="description">
+                        <?php _e('Background color for all link buttons in this tree.', 'linkhub'); ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="LH_link_text_color"><?php _e('Link Button Text Color', 'linkhub'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="LH_link_text_color" name="LH_link_text_color"
+                           value="<?php echo esc_attr($link_text_color); ?>"
+                           class="lh-color-picker" data-default-color="#000000">
+                    <p class="description">
+                        <?php _e('Text color for all link buttons in this tree.', 'linkhub'); ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="LH_title_font"><?php _e('Title Font', 'linkhub'); ?></label>
+                </th>
+                <td>
+                    <select id="LH_title_font" name="LH_title_font">
+                        <option value="system" <?php selected($title_font, 'system'); ?>>
+                            <?php _e('System Default', 'linkhub'); ?>
+                        </option>
+                        <option value="serif" <?php selected($title_font, 'serif'); ?>>
+                            <?php _e('Serif (Georgia, Times)', 'linkhub'); ?>
+                        </option>
+                        <option value="sans" <?php selected($title_font, 'sans'); ?>>
+                            <?php _e('Sans Serif (Arial, Helvetica)', 'linkhub'); ?>
+                        </option>
+                        <option value="mono" <?php selected($title_font, 'mono'); ?>>
+                            <?php _e('Monospace (Courier)', 'linkhub'); ?>
+                        </option>
+                        <option value="poppins" <?php selected($title_font, 'poppins'); ?>>
+                            <?php _e('Poppins (Modern, Bold)', 'linkhub'); ?>
+                        </option>
+                        <option value="montserrat" <?php selected($title_font, 'montserrat'); ?>>
+                            <?php _e('Montserrat (Clean, Geometric)', 'linkhub'); ?>
+                        </option>
+                        <option value="playfair" <?php selected($title_font, 'playfair'); ?>>
+                            <?php _e('Playfair Display (Elegant Serif)', 'linkhub'); ?>
+                        </option>
+                        <option value="raleway" <?php selected($title_font, 'raleway'); ?>>
+                            <?php _e('Raleway (Thin, Stylish)', 'linkhub'); ?>
+                        </option>
+                    </select>
+                    <p class="description">
+                        <?php _e('Font style for the tree title/name.', 'linkhub'); ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="LH_body_font"><?php _e('Body Font', 'linkhub'); ?></label>
+                </th>
+                <td>
+                    <select id="LH_body_font" name="LH_body_font">
+                        <option value="system" <?php selected($body_font, 'system'); ?>>
+                            <?php _e('System Default', 'linkhub'); ?>
+                        </option>
+                        <option value="serif" <?php selected($body_font, 'serif'); ?>>
+                            <?php _e('Serif (Georgia, Times)', 'linkhub'); ?>
+                        </option>
+                        <option value="sans" <?php selected($body_font, 'sans'); ?>>
+                            <?php _e('Sans Serif (Arial, Helvetica)', 'linkhub'); ?>
+                        </option>
+                        <option value="mono" <?php selected($body_font, 'mono'); ?>>
+                            <?php _e('Monospace (Courier)', 'linkhub'); ?>
+                        </option>
+                        <option value="opensans" <?php selected($body_font, 'opensans'); ?>>
+                            <?php _e('Open Sans (Friendly, Readable)', 'linkhub'); ?>
+                        </option>
+                        <option value="roboto" <?php selected($body_font, 'roboto'); ?>>
+                            <?php _e('Roboto (Modern, Clean)', 'linkhub'); ?>
+                        </option>
+                        <option value="lato" <?php selected($body_font, 'lato'); ?>>
+                            <?php _e('Lato (Professional)', 'linkhub'); ?>
+                        </option>
+                        <option value="merriweather" <?php selected($body_font, 'merriweather'); ?>>
+                            <?php _e('Merriweather (Elegant Serif)', 'linkhub'); ?>
+                        </option>
+                    </select>
+                    <p class="description">
+                        <?php _e('Font style for bio text and link buttons.', 'linkhub'); ?>
                     </p>
                 </td>
             </tr>
@@ -596,13 +698,28 @@ class MetaBoxes {
                     </p>
                 </td>
             </tr>
+            <tr>
+                <th scope="row">
+                    <label for="LH_hide_header_footer"><?php _e('Hide Site Header/Footer', 'linkhub'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox" id="LH_hide_header_footer" name="LH_hide_header_footer" value="1"
+                               <?php checked(get_post_meta($post->ID, TreePostType::META_HIDE_HEADER_FOOTER, true), '1'); ?>>
+                        <?php _e('Display in clean blank template (no site header, footer, or navigation)', 'linkhub'); ?>
+                    </label>
+                    <p class="description">
+                        <?php _e('Perfect for link-in-bio pages - removes all theme elements for a distraction-free display.', 'linkhub'); ?>
+                    </p>
+                </td>
+            </tr>
         </table>
 
         <?php // Template for new social link rows - moved outside tables ?>
 
                     <!-- Template for new social link rows -->
-                    <script type="text/template" id="dtol-social-link-template">
-                        <div class="dtol-social-link-row" style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center;">
+                    <script type="text/template" id="lh-social-link-template">
+                        <div class="lh-social-link-row" style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center;">
                             <select name="LH_social_platform[]" style="width: 150px;">
                                 <?php foreach ($platforms as $key => $platform): ?>
                                     <option value="<?php echo esc_attr($key); ?>">
@@ -613,7 +730,7 @@ class MetaBoxes {
                             <input type="url" name="LH_social_url[]"
                                    placeholder="<?php _e('URL', 'linkhub'); ?>"
                                    class="regular-text">
-                            <button type="button" class="button dtol-remove-social-link">
+                            <button type="button" class="button lh-remove-social-link">
                                 <span class="dashicons dashicons-no-alt"></span>
                             </button>
                         </div>
@@ -637,7 +754,7 @@ class MetaBoxes {
         $icon = get_post_meta($post->ID, LinkPostType::META_ICON, true);
         $image_id = get_post_meta($post->ID, LinkPostType::META_IMAGE, true);
         $display_style = get_post_meta($post->ID, LinkPostType::META_DISPLAY_STYLE, true) ?: 'bar';
-        $background_color = get_post_meta($post->ID, LinkPostType::META_BACKGROUND_COLOR, true) ?: '#f8a4c8';
+        $background_color = get_post_meta($post->ID, LinkPostType::META_BACKGROUND_COLOR, true) ?: '#eeeeee';
         $text_color = get_post_meta($post->ID, LinkPostType::META_TEXT_COLOR, true) ?: '#000000';
         
         ?>
@@ -688,27 +805,27 @@ class MetaBoxes {
                     </p>
                 </td>
             </tr>
-            <tr class="dtol-legacy-style-options dtol-bar-card-options" style="<?php echo $display_style === 'heading' ? 'display:none;' : ''; ?>">
+            <tr class="lh-legacy-style-options lh-bar-card-options" style="<?php echo $display_style === 'heading' ? 'display:none;' : ''; ?>">
                 <th scope="row">
                     <label for="LH_background_color"><?php _e('Background Color', 'linkhub'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="LH_background_color" name="LH_background_color"
                            value="<?php echo esc_attr($background_color); ?>"
-                           class="dtol-color-picker" data-default-color="#f8a4c8">
+                           class="lh-color-picker" data-default-color="#eeeeee">
                     <p class="description">
                         <?php _e('Background color for the link button/card (used with legacy display styles).', 'linkhub'); ?>
                     </p>
                 </td>
             </tr>
-            <tr class="dtol-legacy-style-options">
+            <tr class="lh-legacy-style-options">
                 <th scope="row">
                     <label for="LH_text_color"><?php _e('Text Color', 'linkhub'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="LH_text_color" name="LH_text_color"
                            value="<?php echo esc_attr($text_color); ?>"
-                           class="dtol-color-picker" data-default-color="#000000">
+                           class="lh-color-picker" data-default-color="#000000">
                     <p class="description">
                         <?php _e('Text color for the link title (used with legacy display styles).', 'linkhub'); ?>
                     </p>
@@ -732,19 +849,19 @@ class MetaBoxes {
                     <label for="LH_image"><?php _e('Image', 'linkhub'); ?></label>
                 </th>
                 <td>
-                    <div class="dtol-image-upload">
+                    <div class="lh-image-upload">
                         <input type="hidden" id="LH_image_id" name="LH_image_id" 
                                value="<?php echo esc_attr($image_id); ?>">
-                        <div class="dtol-image-preview">
+                        <div class="lh-image-preview">
                             <?php if ($image_id): 
                                 echo wp_get_attachment_image($image_id, 'thumbnail');
                             endif; ?>
                         </div>
-                        <button type="button" class="button dtol-upload-image">
+                        <button type="button" class="button lh-upload-image">
                             <?php echo $image_id ? __('Change Image', 'linkhub') : __('Upload Image', 'linkhub'); ?>
                         </button>
                         <?php if ($image_id): ?>
-                            <button type="button" class="button dtol-remove-image">
+                            <button type="button" class="button lh-remove-image">
                                 <?php _e('Remove', 'linkhub'); ?>
                             </button>
                         <?php endif; ?>
@@ -768,7 +885,7 @@ class MetaBoxes {
         $last_clicked = get_post_meta($post->ID, LinkPostType::META_LAST_CLICKED, true);
         
         ?>
-        <div class="dtol-stats">
+        <div class="lh-stats">
             <p>
                 <strong><?php _e('Total Clicks:', 'linkhub'); ?></strong><br>
                 <span style="font-size: 24px;"><?php echo absint($click_count); ?></span>
@@ -784,7 +901,7 @@ class MetaBoxes {
                 <p>
                     <strong><?php _e('Tracking URL:', 'linkhub'); ?></strong><br>
                     <code style="word-break: break-all;">
-                        <?php echo esc_html(\ElyseVIP\LinkHub\Tracking\RedirectHandler::get_tracking_url($post->ID)); ?>
+                        <?php echo esc_html(\LinkHub\Tracking\RedirectHandler::get_tracking_url($post->ID)); ?>
                     </code>
                 </p>
             <?php endif; ?>
@@ -938,6 +1055,30 @@ class MetaBoxes {
             update_post_meta($post_id, TreePostType::META_SOCIAL_COLOR, sanitize_hex_color($_POST['LH_social_color']));
         }
 
+        if (isset($_POST['LH_link_background_color'])) {
+            update_post_meta($post_id, TreePostType::META_LINK_BACKGROUND_COLOR, sanitize_hex_color($_POST['LH_link_background_color']));
+        }
+
+        if (isset($_POST['LH_link_text_color'])) {
+            update_post_meta($post_id, TreePostType::META_LINK_TEXT_COLOR, sanitize_hex_color($_POST['LH_link_text_color']));
+        }
+
+        if (isset($_POST['LH_title_font'])) {
+            $valid_fonts = ['system', 'serif', 'sans', 'mono', 'poppins', 'montserrat', 'playfair', 'raleway'];
+            $font = sanitize_text_field($_POST['LH_title_font']);
+            if (in_array($font, $valid_fonts)) {
+                update_post_meta($post_id, TreePostType::META_TITLE_FONT, $font);
+            }
+        }
+
+        if (isset($_POST['LH_body_font'])) {
+            $valid_fonts = ['system', 'serif', 'sans', 'mono', 'opensans', 'roboto', 'lato', 'merriweather'];
+            $font = sanitize_text_field($_POST['LH_body_font']);
+            if (in_array($font, $valid_fonts)) {
+                update_post_meta($post_id, TreePostType::META_BODY_FONT, $font);
+            }
+        }
+
         if (isset($_POST['LH_heading_size'])) {
             $valid_sizes = ['small', 'medium', 'large'];
             $size = sanitize_text_field($_POST['LH_heading_size']);
@@ -945,6 +1086,10 @@ class MetaBoxes {
                 update_post_meta($post_id, TreePostType::META_HEADING_SIZE, $size);
             }
         }
+
+        // Hide header/footer checkbox
+        $hide_header_footer = isset($_POST['LH_hide_header_footer']) ? '1' : '0';
+        update_post_meta($post_id, TreePostType::META_HIDE_HEADER_FOOTER, $hide_header_footer);
     }
 
     /**
@@ -971,7 +1116,7 @@ class MetaBoxes {
         if (isset($_POST['LH_url'])) {
             update_post_meta($post_id, LinkPostType::META_URL, esc_url_raw($_POST['LH_url']));
             // Invalidate cache when URL changes
-            \ElyseVIP\LinkHub\Tracking\RedirectHandler::invalidate_cache($post_id);
+            \LinkHub\Tracking\RedirectHandler::invalidate_cache($post_id);
         }
 
         // Save description
@@ -1032,33 +1177,33 @@ class MetaBoxes {
         wp_add_inline_script('jquery-ui-sortable', "
             jQuery(document).ready(function($) {
                 // Sortable links
-                $('#dtol-selected-links').sortable({
-                    handle: '.dtol-drag-handle',
-                    placeholder: 'dtol-link-placeholder',
+                $('#lh-selected-links').sortable({
+                    handle: '.lh-drag-handle',
+                    placeholder: 'lh-link-placeholder',
                     update: function() {
-                        $('.dtol-empty-message').hide();
+                        $('.lh-empty-message').hide();
                     }
                 });
                 
                 // Add link to end
-                $('#dtol-add-link-btn').on('click', function() {
-                    var linkId = $('#dtol-add-link-select').val();
-                    var linkTitle = $('#dtol-add-link-select option:selected').text();
+                $('#lh-add-link-btn').on('click', function() {
+                    var linkId = $('#lh-add-link-select').val();
+                    var linkTitle = $('#lh-add-link-select option:selected').text();
                     
                     if (!linkId) return;
                     
                     // Check if already added
-                    if ($('.dtol-link-item[data-link-id=\"' + linkId + '\"]').length) {
+                    if ($('.lh-link-item[data-link-id=\"' + linkId + '\"]').length) {
                         alert('This link is already added.');
                         return;
                     }
                     
                     addLinkItem(linkId, linkTitle);
-                    $('#dtol-add-link-select').val('');
+                    $('#lh-add-link-select').val('');
                 });
                 
                 // Add heading
-                $('#dtol-add-heading-btn').on('click', function() {
+                $('#lh-add-heading-btn').on('click', function() {
                     var headingText = prompt('Enter heading text:');
                     if (!headingText) return;
                     
@@ -1071,10 +1216,10 @@ class MetaBoxes {
                 });
                 
                 // Edit heading
-                $(document).on('click', '.dtol-edit-heading', function() {
-                    var item = $(this).closest('.dtol-link-item');
-                    var currentText = item.find('.dtol-heading-text').val();
-                    var currentSize = item.find('.dtol-heading-size').val();
+                $(document).on('click', '.lh-edit-heading', function() {
+                    var item = $(this).closest('.lh-link-item');
+                    var currentText = item.find('.lh-heading-text').val();
+                    var currentSize = item.find('.lh-heading-size').val();
                     
                     var newText = prompt('Edit heading text:', currentText);
                     if (newText === null) return;
@@ -1084,139 +1229,133 @@ class MetaBoxes {
                         newSize = currentSize;
                     }
                     
-                    item.find('.dtol-link-info strong').html('Heading: ' + $('<div>').text(newText).html());
-                    item.find('.dtol-link-meta').text('Size: ' + newSize);
-                    item.find('.dtol-heading-text').val(newText);
-                    item.find('.dtol-heading-size').val(newSize);
+                    item.find('.lh-link-info strong').html('Heading: ' + $('<div>').text(newText).html());
+                    item.find('.lh-link-meta').text('Size: ' + newSize);
+                    item.find('.lh-heading-text').val(newText);
+                    item.find('.lh-heading-size').val(newSize);
                 });
                 
                 // Insert here button
-                $(document).on('click', '.dtol-insert-here', function() {
-                    var targetItem = $(this).closest('.dtol-link-item');
-                    var choice = prompt('Insert: 1 = Link, 2 = Heading', '1');
+                $(document).on('click', '.lh-insert-here', function() {
+                    var targetItem = $(this).closest('.lh-link-item');
                     
-                    if (choice === '1') {
-                        var linkId = prompt('Enter Link ID (or use the dropdown above)');
-                        if (!linkId) return;
-                        
-                        // Check if already added
-                        if ($('.dtol-link-item[data-link-id=\"' + linkId + '\"]').length) {
-                            alert('This link is already added.');
-                            return;
-                        }
-                        
-                        addLinkItemBefore(linkId, 'Link ' + linkId, targetItem);
-                    } else if (choice === '2') {
-                        var headingText = prompt('Enter heading text:');
-                        if (!headingText) return;
-                        
-                        var headingSize = prompt('Enter heading size (small, medium, or large):', 'medium');
-                        if (!headingSize || !['small', 'medium', 'large'].includes(headingSize)) {
-                            headingSize = 'medium';
-                        }
-                        
-                        addHeadingItemBefore(headingText, headingSize, targetItem);
+                    // Get selected link from dropdown
+                    var linkId = $('#lh-add-link-select').val();
+                    var linkTitle = $('#lh-add-link-select option:selected').text();
+                    
+                    if (!linkId) {
+                        alert('Please select a link from the dropdown first.');
+                        return;
                     }
+                    
+                    // Check if already added
+                    if ($('.lh-link-item[data-link-id=\"' + linkId + '\"]').length) {
+                        alert('This link is already added.');
+                        return;
+                    }
+                    
+                    addLinkItemBefore(linkId, linkTitle, targetItem);
+                    $('#lh-add-link-select').val('');
                 });
                 
                 // Remove link/heading
-                $(document).on('click', '.dtol-remove-link', function() {
-                    $(this).closest('.dtol-link-item').remove();
-                    if ($('#dtol-selected-links .dtol-link-item').length === 0) {
-                        $('.dtol-empty-message').show();
+                $(document).on('click', '.lh-remove-link', function() {
+                    $(this).closest('.lh-link-item').remove();
+                    if ($('#lh-selected-links .lh-link-item').length === 0) {
+                        $('.lh-empty-message').show();
                     }
                 });
                 
                 // Helper function to add link item
                 function addLinkItem(linkId, linkTitle) {
-                    var item = $('<li class=\"dtol-link-item\" data-link-id=\"' + linkId + '\" data-type=\"link\">' +
-                        '<span class=\"dtol-drag-handle dashicons dashicons-menu\"></span>' +
-                        '<span class=\"dtol-link-thumbnail-placeholder dashicons dashicons-admin-links\"></span>' +
-                        '<div class=\"dtol-link-info\">' +
+                    var item = $('<li class=\"lh-link-item\" data-link-id=\"' + linkId + '\" data-type=\"link\">' +
+                        '<span class=\"lh-drag-handle dashicons dashicons-menu\"></span>' +
+                        '<span class=\"lh-link-thumbnail-placeholder dashicons dashicons-admin-links\"></span>' +
+                        '<div class=\"lh-link-info\">' +
                             '<strong>' + linkTitle + '</strong>' +
                         '</div>' +
-                        '<div class=\"dtol-link-actions\">' +
-                            '<button type=\"button\" class=\"button button-small dtol-remove-link\">Remove</button>' +
+                        '<div class=\"lh-link-actions\">' +
+                            '<button type=\"button\" class=\"button button-small lh-remove-link\">Remove</button>' +
                         '</div>' +
-                        '<button type=\"button\" class=\"dtol-insert-here button button-small\" title=\"Insert item here\">' +
+                        '<button type=\"button\" class=\"lh-insert-here button button-small\" title=\"Insert item here\">' +
                             '<span class=\"dashicons dashicons-plus-alt\"></span>' +
                         '</button>' +
-                        '<input type=\"hidden\" class=\"dtol-item-type\" name=\"LH_tree_items[type][]\" value=\"link\">' +
+                        '<input type=\"hidden\" class=\"lh-item-type\" name=\"LH_tree_items[type][]\" value=\"link\">' +
                         '<input type=\"hidden\" name=\"LH_tree_items[link_id][]\" value=\"' + linkId + '\">' +
                     '</li>');
                     
-                    $('#dtol-selected-links').append(item);
-                    $('.dtol-empty-message').hide();
+                    $('#lh-selected-links').append(item);
+                    $('.lh-empty-message').hide();
                 }
                 
                 function addLinkItemBefore(linkId, linkTitle, targetItem) {
-                    var item = $('<li class=\"dtol-link-item\" data-link-id=\"' + linkId + '\" data-type=\"link\">' +
-                        '<span class=\"dtol-drag-handle dashicons dashicons-menu\"></span>' +
-                        '<span class=\"dtol-link-thumbnail-placeholder dashicons dashicons-admin-links\"></span>' +
-                        '<div class=\"dtol-link-info\">' +
+                    var item = $('<li class=\"lh-link-item\" data-link-id=\"' + linkId + '\" data-type=\"link\">' +
+                        '<span class=\"lh-drag-handle dashicons dashicons-menu\"></span>' +
+                        '<span class=\"lh-link-thumbnail-placeholder dashicons dashicons-admin-links\"></span>' +
+                        '<div class=\"lh-link-info\">' +
                             '<strong>' + linkTitle + '</strong>' +
                         '</div>' +
-                        '<div class=\"dtol-link-actions\">' +
-                            '<button type=\"button\" class=\"button button-small dtol-remove-link\">Remove</button>' +
+                        '<div class=\"lh-link-actions\">' +
+                            '<button type=\"button\" class=\"button button-small lh-remove-link\">Remove</button>' +
                         '</div>' +
-                        '<button type=\"button\" class=\"dtol-insert-here button button-small\" title=\"Insert item here\">' +
+                        '<button type=\"button\" class=\"lh-insert-here button button-small\" title=\"Insert item here\">' +
                             '<span class=\"dashicons dashicons-plus-alt\"></span>' +
                         '</button>' +
-                        '<input type=\"hidden\" class=\"dtol-item-type\" name=\"LH_tree_items[type][]\" value=\"link\">' +
+                        '<input type=\"hidden\" class=\"lh-item-type\" name=\"LH_tree_items[type][]\" value=\"link\">' +
                         '<input type=\"hidden\" name=\"LH_tree_items[link_id][]\" value=\"' + linkId + '\">' +
                     '</li>');
                     
                     targetItem.before(item);
-                    $('.dtol-empty-message').hide();
+                    $('.lh-empty-message').hide();
                 }
                 
                 // Helper function to add heading item
                 function addHeadingItem(text, size) {
-                    var item = $('<li class=\"dtol-link-item dtol-heading-item\" data-type=\"heading\">' +
-                        '<span class=\"dtol-drag-handle dashicons dashicons-menu\"></span>' +
-                        '<div class=\"dtol-link-info\">' +
+                    var item = $('<li class=\"lh-link-item lh-heading-item\" data-type=\"heading\">' +
+                        '<span class=\"lh-drag-handle dashicons dashicons-menu\"></span>' +
+                        '<div class=\"lh-link-info\">' +
                             '<span class=\"dashicons dashicons-editor-textcolor\" style=\"color: #999;\"></span>' +
                             '<strong>Heading: ' + $('<div>').text(text).html() + '</strong>' +
-                            '<span class=\"dtol-link-meta\">Size: ' + size + '</span>' +
+                            '<span class=\"lh-link-meta\">Size: ' + size + '</span>' +
                         '</div>' +
-                        '<div class=\"dtol-link-actions\">' +
-                            '<button type=\"button\" class=\"button button-small dtol-edit-heading\">Edit</button>' +
-                            '<button type=\"button\" class=\"button button-small dtol-remove-link\">Remove</button>' +
+                        '<div class=\"lh-link-actions\">' +
+                            '<button type=\"button\" class=\"button button-small lh-edit-heading\">Edit</button>' +
+                            '<button type=\"button\" class=\"button button-small lh-remove-link\">Remove</button>' +
                         '</div>' +
-                        '<button type=\"button\" class=\"dtol-insert-here button button-small\" title=\"Insert item here\">' +
+                        '<button type=\"button\" class=\"lh-insert-here button button-small\" title=\"Insert item here\">' +
                             '<span class=\"dashicons dashicons-plus-alt\"></span>' +
                         '</button>' +
-                        '<input type=\"hidden\" class=\"dtol-item-type\" name=\"LH_tree_items[type][]\" value=\"heading\">' +
-                        '<input type=\"hidden\" class=\"dtol-heading-text\" name=\"LH_tree_items[text][]\" value=\"' + $('<div>').text(text).html() + '\">' +
-                        '<input type=\"hidden\" class=\"dtol-heading-size\" name=\"LH_tree_items[size][]\" value=\"' + size + '\">' +
+                        '<input type=\"hidden\" class=\"lh-item-type\" name=\"LH_tree_items[type][]\" value=\"heading\">' +
+                        '<input type=\"hidden\" class=\"lh-heading-text\" name=\"LH_tree_items[text][]\" value=\"' + $('<div>').text(text).html() + '\">' +
+                        '<input type=\"hidden\" class=\"lh-heading-size\" name=\"LH_tree_items[size][]\" value=\"' + size + '\">' +
                     '</li>');
                     
-                    $('#dtol-selected-links').append(item);
-                    $('.dtol-empty-message').hide();
+                    $('#lh-selected-links').append(item);
+                    $('.lh-empty-message').hide();
                 }
                 
                 function addHeadingItemBefore(text, size, targetItem) {
-                    var item = $('<li class=\"dtol-link-item dtol-heading-item\" data-type=\"heading\">' +
-                        '<span class=\"dtol-drag-handle dashicons dashicons-menu\"></span>' +
-                        '<div class=\"dtol-link-info\">' +
+                    var item = $('<li class=\"lh-link-item lh-heading-item\" data-type=\"heading\">' +
+                        '<span class=\"lh-drag-handle dashicons dashicons-menu\"></span>' +
+                        '<div class=\"lh-link-info\">' +
                             '<span class=\"dashicons dashicons-editor-textcolor\" style=\"color: #999;\"></span>' +
                             '<strong>Heading: ' + $('<div>').text(text).html() + '</strong>' +
-                            '<span class=\"dtol-link-meta\">Size: ' + size + '</span>' +
+                            '<span class=\"lh-link-meta\">Size: ' + size + '</span>' +
                         '</div>' +
-                        '<div class=\"dtol-link-actions\">' +
-                            '<button type=\"button\" class=\"button button-small dtol-edit-heading\">Edit</button>' +
-                            '<button type=\"button\" class=\"button button-small dtol-remove-link\">Remove</button>' +
+                        '<div class=\"lh-link-actions\">' +
+                            '<button type=\"button\" class=\"button button-small lh-edit-heading\">Edit</button>' +
+                            '<button type=\"button\" class=\"button button-small lh-remove-link\">Remove</button>' +
                         '</div>' +
-                        '<button type=\"button\" class=\"dtol-insert-here button button-small\" title=\"Insert item here\">' +
+                        '<button type=\"button\" class=\"lh-insert-here button button-small\" title=\"Insert item here\">' +
                             '<span class=\"dashicons dashicons-plus-alt\"></span>' +
                         '</button>' +
-                        '<input type=\"hidden\" class=\"dtol-item-type\" name=\"LH_tree_items[type][]\" value=\"heading\">' +
-                        '<input type=\"hidden\" class=\"dtol-heading-text\" name=\"LH_tree_items[text][]\" value=\"' + $('<div>').text(text).html() + '\">' +
-                        '<input type=\"hidden\" class=\"dtol-heading-size\" name=\"LH_tree_items[size][]\" value=\"' + size + '\">' +
+                        '<input type=\"hidden\" class=\"lh-item-type\" name=\"LH_tree_items[type][]\" value=\"heading\">' +
+                        '<input type=\"hidden\" class=\"lh-heading-text\" name=\"LH_tree_items[text][]\" value=\"' + $('<div>').text(text).html() + '\">' +
+                        '<input type=\"hidden\" class=\"lh-heading-size\" name=\"LH_tree_items[size][]\" value=\"' + size + '\">' +
                     '</li>');
                     
                     targetItem.before(item);
-                    $('.dtol-empty-message').hide();
+                    $('.lh-empty-message').hide();
                 }
                 
                 // Image upload
@@ -1325,8 +1464,8 @@ class MetaBoxes {
                 // Add social link
                 $('.lh-add-social-link').on('click', function(e) {
                     e.preventDefault();
-                    var template = $('#dtol-social-link-template').html();
-                    $('#dtol-social-links-container').append(template);
+                    var template = $('#lh-social-link-template').html();
+                    $('#lh-social-links-container').append(template);
                 });
 
                 // Remove social link
@@ -1367,3 +1506,4 @@ class MetaBoxes {
         return is_array($link_ids) ? $link_ids : [];
     }
 }
+

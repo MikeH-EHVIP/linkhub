@@ -4,14 +4,17 @@ Create beautiful link-in-bio pages for WordPress with CPT-based link management 
 
 ## Features
 
+- **Tree Builder UI**: Modern three-panel admin interface with sidebar, editor, and live preview
 - **Custom Post Types**: Separate Trees and Links for maximum flexibility
 - **Click Tracking**: Built-in redirection engine with click count analytics
 - **Display Styles**: Bar (button), Card (image card), and Heading (text divider) styles
 - **Inline Headings**: Add section headings directly in the tree builder
 - **Tree Customization**: Profile header image, about text, and social links bar
-- **Visual Interface**: Thumbnails for links, drag-and-drop ordering, insert-at-position functionality
+- **Live Preview**: Real-time iframe preview updates as you edit
+- **Drag-and-Drop**: Reorder links and headings with visual feedback
+- **Inline Editing**: Edit links and headings via modal popups
+- **Auto-save**: Changes automatically saved with status indicator
 - **Performance Optimized**: Clean, efficient code with minimal overhead
-- **Admin UI**: Intuitive interface for managing link order with visual feedback
 
 ## Installation
 
@@ -48,17 +51,23 @@ Create beautiful link-in-bio pages for WordPress with CPT-based link management 
 
 ### Creating a Tree
 
-1. Go to **Link Trees → Add New**
-2. Configure **Tree Settings**:
-   - **Header Image**: Profile picture or logo (recommended 400x400px)
-   - **About Text**: Short bio or description
+#### Using Tree Builder (Recommended)
+
+1. Go to **Link Trees → Tree Builder**
+2. Click **+ New Tree** in the sidebar or select an existing tree
+3. Use the sidebar navigation to configure:
+   - **Links**: Add, reorder, and edit links with drag-and-drop
+   - **Profile**: Set header image and about text
    - **Social Links**: Add social media icons with URLs
-   - **Styling**: Background colors, hero image shape, colors
-3. Use the **Link Tree Items** meta box to:
-   - Select and add links from the dropdown
-   - Add headings to organize sections (small, medium, or large)
-   - Use "Insert here" buttons to add items at specific positions
-   - Drag and drop to reorder
+   - **Appearance**: Configure colors and typography
+   - **Display**: Set hero shape, fade effects, and visibility options
+4. Changes auto-save and preview updates in real-time
+
+#### Using Classic Editor
+
+1. Go to **Link Trees → Add New**
+2. Configure **Tree Settings** in the meta boxes
+3. Use the **Link Tree Items** meta box to add and reorder links
 4. Publish the tree
 
 ### Displaying Trees
@@ -98,7 +107,9 @@ linkhub/
 │   ├── Tracking/               # Click tracking and redirects
 │   │   └── RedirectHandler.php
 │   ├── Admin/                  # Meta boxes and admin UI
-│   │   ├── MetaBoxes.php
+│   │   ├── MetaBoxes.php       # Classic editor meta boxes
+│   │   ├── TreeBuilderPage.php # Tree Builder admin page
+│   │   ├── RestController.php  # REST API endpoints
 │   │   ├── ClickwhaleImporter.php
 │   │   └── ExportImport.php
 │   ├── Rendering/              # Frontend rendering
@@ -106,13 +117,17 @@ linkhub/
 │   │   └── LinkTypeRenderer.php # Renders individual links
 │   ├── Export/                 # Export functionality
 │   │   └── TreeExporter.php
-│   └── Modules/                # Module utilities
-│       └── TreeOfLinksModules.php
+│   ├── Modules/                # Module utilities
+│   │   └── TreeOfLinksModules.php
+│   └── templates/admin/        # Admin templates
+│       └── tree-builder-page.php
 ├── assets/                     # Frontend assets
 │   ├── css/
-│   │   └── modules.css         # Frontend styles
+│   │   ├── modules.css         # Frontend styles
+│   │   └── tree-builder.css    # Tree Builder admin styles
 │   └── js/
-│       └── modules.js          # Frontend JavaScript
+│       ├── modules.js          # Frontend JavaScript
+│       └── tree-builder.js     # Tree Builder admin JavaScript
 ├── scripts/                    # Build scripts
 │   ├── build-plugin-zip.ps1
 │   └── build-plugin-zip.sh

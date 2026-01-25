@@ -1,14 +1,14 @@
-﻿<?php
+<?php
 /**
  * Tree Exporter
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
-namespace ElyseVIP\LinkHub\Export;
+namespace LinkHub\Export;
 
-use ElyseVIP\LinkHub\PostTypes\TreePostType;
-use ElyseVIP\LinkHub\PostTypes\LinkPostType;
+use LinkHub\PostTypes\TreePostType;
+use LinkHub\PostTypes\LinkPostType;
 
 /**
  * Tree Exporter Class
@@ -221,6 +221,7 @@ class TreeExporter {
     public static function get_filename() {
         $site_name = sanitize_title(get_bloginfo('name'));
         $date = date('Y-m-d');
-        return "dtol-export-{$site_name}-{$date}.json";
+        return "lh-export-{$site_name}-{$date}.json";
     }
 }
+

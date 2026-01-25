@@ -1,14 +1,14 @@
-﻿<?php
+<?php
 /**
  * Clickwhale Importer
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
-namespace ElyseVIP\LinkHub\Admin;
+namespace LinkHub\Admin;
 
-use ElyseVIP\LinkHub\PostTypes\LinkPostType;
-use ElyseVIP\LinkHub\PostTypes\TreePostType;
+use LinkHub\PostTypes\LinkPostType;
+use LinkHub\PostTypes\TreePostType;
 
 /**
  * Clickwhale Importer Class
@@ -38,7 +38,7 @@ class ClickwhaleImporter {
      * Constructor
      */
     private function __construct() {
-        add_action('admin_menu', [$this, 'add_menu_page']);
+        add_action('admin_menu', [$this, 'add_menu_page'], 20);
         add_action('admin_post_LH_import_clickwhale', [$this, 'handle_import']);
     }
     
@@ -51,7 +51,7 @@ class ClickwhaleImporter {
             __('Import from Clickwhale', 'linkhub'),
             __('Import', 'linkhub'),
             'manage_options',
-            'dtol-import-clickwhale',
+            'lh-import-clickwhale',
             [$this, 'render_import_page']
         );
     }
@@ -151,9 +151,9 @@ class ClickwhaleImporter {
                 
                 <p><strong><?php _e('Simple Format Example:', 'linkhub'); ?></strong></p>
                 <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px;">title,url,clicks,icon
-My Website,https://example.com,150,🌐
+My Website,https://example.com,150,??
 Twitter,https://twitter.com/myhandle,89,fa-brands fa-twitter
-Instagram,https://instagram.com/myhandle,203,📷</pre>
+Instagram,https://instagram.com/myhandle,203,??</pre>
                 
                 <p class="description">
                     <strong><?php _e('Note:', 'linkhub'); ?></strong>
@@ -236,7 +236,7 @@ Instagram,https://instagram.com/myhandle,203,📷</pre>
         
         // Redirect with success message
         $redirect_args = [
-            'page'     => 'dtol-import-clickwhale',
+            'page'     => 'lh-import-clickwhale',
             'imported' => count($imported_ids),
         ];
         
@@ -314,6 +314,25 @@ Instagram,https://instagram.com/myhandle,203,📷</pre>
                 continue;
             }
             
+            // Check for duplicate URL
+            $existing = get_posts([
+                'post_type' => LinkPostType::POST_TYPE,
+                'meta_query' => [
+                    [
+                        'key' => LinkPostType::META_URL,
+                        'value' => esc_url_raw($url),
+                        'compare' => '='
+                    ]
+                ],
+                'posts_per_page' => 1,
+                'fields' => 'ids'
+            ]);
+            
+            if (!empty($existing)) {
+                $result['errors'][] = sprintf(__('Row %d: Duplicate URL already exists (Link ID: %d)', 'linkhub'), $row_number, $existing[0]);
+                continue;
+            }
+            
             // Create link post
             $post_id = wp_insert_post([
                 'post_type'   => LinkPostType::POST_TYPE,
@@ -369,3 +388,4 @@ Instagram,https://instagram.com/myhandle,203,📷</pre>
         return false;
     }
 }
+

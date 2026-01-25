@@ -1,13 +1,13 @@
-﻿<?php
+<?php
 /**
  * Redirect and Click Tracking Handler
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
-namespace ElyseVIP\LinkHub\Tracking;
+namespace LinkHub\Tracking;
 
-use ElyseVIP\LinkHub\PostTypes\LinkPostType;
+use LinkHub\PostTypes\LinkPostType;
 
 /**
  * Redirect Handler Class
@@ -182,3 +182,4 @@ class RedirectHandler {
         wp_cache_delete('count_' . $link_id, self::CACHE_GROUP);
     }
 }
+

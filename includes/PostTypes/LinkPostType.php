@@ -1,11 +1,11 @@
-﻿<?php
+<?php
 /**
  * Link Custom Post Type
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
-namespace ElyseVIP\LinkHub\PostTypes;
+namespace LinkHub\PostTypes;
 
 /**
  * Link Post Type Class
@@ -15,7 +15,7 @@ class LinkPostType {
     /**
      * Post type slug
      */
-    const POST_TYPE = 'LH_link';
+    const POST_TYPE = 'lh_link';
     
     /**
      * Meta key for URL
@@ -111,7 +111,7 @@ class LinkPostType {
             'publicly_queryable'    => false,
             'capability_type'       => 'post',
             'show_in_rest'          => true,
-            'rest_base'             => 'dtol-links',
+            'rest_base'             => 'lh-links',
             'rest_controller_class' => 'WP_REST_Posts_Controller',
         ];
         
@@ -282,3 +282,4 @@ class LinkPostType {
         return (int) get_post_meta($post_id, self::META_CLICK_COUNT, true);
     }
 }
+

@@ -2,7 +2,7 @@
 # Creates a clean distribution-ready ZIP file
 
 param(
-    [string]$Version = "0.1.0",
+    [string]$Version = "0.2.0",
     [string]$OutputDir = "dist"
 )
 
@@ -48,8 +48,11 @@ if (Test-Path $distignorePath) {
 
 Write-Host "Copying plugin files..." -ForegroundColor Gray
 
-# Get all files
-$allFiles = Get-ChildItem -Path $pluginDir -Recurse -File
+# Get all files (filter out Windows reserved names)
+$reservedNames = @('nul', 'con', 'aux', 'prn', 'com1', 'com2', 'com3', 'com4', 'lpt1', 'lpt2', 'lpt3', 'lpt4')
+$allFiles = Get-ChildItem -Path $pluginDir -Recurse -File | Where-Object {
+    $reservedNames -notcontains $_.BaseName.ToLower()
+}
 
 $copiedCount = 0
 foreach ($file in $allFiles) {
@@ -97,7 +100,7 @@ Write-Host "Creating ZIP archive..." -ForegroundColor Gray
 # Use .NET compression to avoid file locking issues
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 try {
-    [System.IO.Compression.ZipFile]::CreateFromDirectory($tempDir, $zipPath, 'Optimal', $false)
+    [System.IO.Compression.ZipFile]::CreateFromDirectory($pluginTempDir, $zipPath, 'Optimal', $false)
     Write-Host "Archive created successfully" -ForegroundColor Green
 } catch {
     Write-Host "Error creating archive: $_" -ForegroundColor Red
@@ -118,7 +121,19 @@ Write-Host "Output: $zipPath" -ForegroundColor Yellow
 Write-Host "Size: $zipSizeMB MB" -ForegroundColor Yellow
 Write-Host ""
 
+# Copy to local WordPress test site
+$testSitePluginDir = "E:\laragon\www\WordPress-Test-Site\wp-content\plugins\linkhub"
+Write-Host "Copying to test site..." -ForegroundColor Gray
+
+if (Test-Path $testSitePluginDir) {
+    Remove-Item -Recurse -Force $testSitePluginDir
+}
+
+Copy-Item -Path $pluginTempDir -Destination $testSitePluginDir -Recurse -Force
+Write-Host "Deployed to: $testSitePluginDir" -ForegroundColor Green
+Write-Host ""
+
 # Clean up temp directory
 Remove-Item -Recurse -Force $tempDir
 
-Write-Host "Ready to upload to WordPress!" -ForegroundColor Cyan
+Write-Host "Ready to test locally or upload remotely!" -ForegroundColor Cyan

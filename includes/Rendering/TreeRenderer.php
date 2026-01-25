@@ -1,13 +1,13 @@
-﻿<?php
+<?php
 /**
  * Tree Renderer
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
-namespace ElyseVIP\LinkHub\Rendering;
+namespace LinkHub\Rendering;
 
-use ElyseVIP\LinkHub\PostTypes\TreePostType;
+use LinkHub\PostTypes\TreePostType;
 
 /**
  * Tree Renderer Class
@@ -23,29 +23,18 @@ class TreeRenderer {
         add_filter('the_content', [self::class, 'render_tree_content'], 20);
         add_action('wp_enqueue_scripts', [self::class, 'enqueue_frontend_styles']);
 
-        // Tell Divi that builder content is being used on Tree pages
-        // This ensures Divi's style system properly queues and outputs styles
-        add_filter('et_core_is_builder_used_on_current_request', [self::class, 'enable_builder_on_trees']);
-
-        // Ensure Divi's StaticCSS is set up early for Tree pages
-        add_action('wp', [self::class, 'setup_divi_context'], 5);
+        // Hide admin bar in preview mode (Tree Builder preview)
+        add_filter('show_admin_bar', [self::class, 'maybe_hide_admin_bar']);
     }
 
     /**
-     * Set up Divi context early for Tree pages
-     *
-     * This ensures StaticCSS and font loading is properly initialized
-     * before content rendering begins.
+     * Hide admin bar when in preview mode (Tree Builder preview)
      */
-    public static function setup_divi_context() {
-        if (!is_singular(TreePostType::POST_TYPE)) {
-            return;
+    public static function maybe_hide_admin_bar($show) {
+        if (isset($_GET['lh_preview']) && $_GET['lh_preview'] === '1') {
+            return false;
         }
-
-        // Trigger Divi's StaticCSS setup if available
-        if (class_exists('ET\\Builder\\FrontEnd\\Assets\\StaticCSS')) {
-            \ET\Builder\FrontEnd\Assets\StaticCSS::setup();
-        }
+        return $show;
     }
 
     /**
@@ -54,28 +43,12 @@ class TreeRenderer {
     public static function enqueue_frontend_styles() {
         if (is_singular(TreePostType::POST_TYPE)) {
             wp_enqueue_style(
-                'dtol-frontend',
+                'lh-frontend',
                 LH_PLUGIN_URL . 'assets/css/modules.css',
                 [],
                 LH_VERSION
             );
         }
-    }
-
-    /**
-     * Enable Divi builder context on Tree pages
-     *
-     * This tells Divi that builder content is being used, ensuring
-     * styles from Link Type Design templates are properly queued and output.
-     *
-     * @param bool $builder_used Whether builder is used on current request
-     * @return bool
-     */
-    public static function enable_builder_on_trees($builder_used) {
-        if (is_singular(TreePostType::POST_TYPE)) {
-            return true;
-        }
-        return $builder_used;
     }
 
     /**
@@ -97,6 +70,7 @@ class TreeRenderer {
 
         // Get tree settings
         $header_image_id = get_post_meta($post->ID, TreePostType::META_HEADER_IMAGE, true);
+        $header_image_url = get_post_meta($post->ID, TreePostType::META_HEADER_IMAGE . '_url', true);
         $about_text = get_post_meta($post->ID, TreePostType::META_ABOUT_TEXT, true);
         $social_links = get_post_meta($post->ID, TreePostType::META_SOCIAL_LINKS, true);
 
@@ -104,26 +78,31 @@ class TreeRenderer {
         $background_color = get_post_meta($post->ID, TreePostType::META_BACKGROUND_COLOR, true) ?: '#8b8178';
         $tree_background_color = get_post_meta($post->ID, TreePostType::META_TREE_BACKGROUND_COLOR, true) ?: '#f5f5f5';
         $background_image_id = get_post_meta($post->ID, TreePostType::META_BACKGROUND_IMAGE, true);
+        $background_image_url = get_post_meta($post->ID, TreePostType::META_BACKGROUND_IMAGE . '_url', true);
         $hero_shape = get_post_meta($post->ID, TreePostType::META_HERO_SHAPE, true) ?: 'round';
         $hero_fade = get_post_meta($post->ID, TreePostType::META_HERO_FADE, true);
         $title_color = get_post_meta($post->ID, TreePostType::META_TITLE_COLOR, true) ?: '#1a1a1a';
         $bio_color = get_post_meta($post->ID, TreePostType::META_BIO_COLOR, true) ?: '#555555';
         $social_style = get_post_meta($post->ID, TreePostType::META_SOCIAL_STYLE, true) ?: 'circle';
         $social_color = get_post_meta($post->ID, TreePostType::META_SOCIAL_COLOR, true) ?: '#333333';
+        $link_background_color = get_post_meta($post->ID, TreePostType::META_LINK_BACKGROUND_COLOR, true) ?: '#eeeeee';
+        $link_text_color = get_post_meta($post->ID, TreePostType::META_LINK_TEXT_COLOR, true) ?: '#000000';
+        $title_font = get_post_meta($post->ID, TreePostType::META_TITLE_FONT, true) ?: 'system';
+        $body_font = get_post_meta($post->ID, TreePostType::META_BODY_FONT, true) ?: 'system';
         $heading_size = get_post_meta($post->ID, TreePostType::META_HEADING_SIZE, true) ?: 'medium';
 
         // Get the tree's links
         $tree_links = get_post_meta($post->ID, TreePostType::META_TREE_LINKS, true);
 
         // Build inline styles for page
-        $page_styles = self::build_page_styles($background_color, $tree_background_color, $background_image_id, $title_color, $bio_color, $social_color);
+        $page_styles = self::build_page_styles($background_color, $tree_background_color, $background_image_id, $title_color, $bio_color, $social_color, $link_background_color, $link_text_color, $title_font, $body_font);
 
         // Start output with inline styles
         $output = $page_styles;
-        $output .= '<div class="dtol-tree dtol-hero-' . esc_attr($hero_shape) . ' dtol-social-' . esc_attr($social_style) . '">';
+        $output .= '<div class="lh-tree lh-hero-' . esc_attr($hero_shape) . ' lh-social-' . esc_attr($social_style) . '">';
 
         // Render header section (image + title + about)
-        $output .= self::render_tree_header($post, $header_image_id, $about_text, $hero_fade);
+        $output .= self::render_tree_header($post, $header_image_id, $header_image_url, $about_text, $hero_fade);
 
         // Render social links bar
         if (!empty($social_links) && is_array($social_links)) {
@@ -132,7 +111,7 @@ class TreeRenderer {
 
         // Check if there are links to display
         if (!is_array($tree_links) || empty($tree_links)) {
-            $output .= '<div class="dtol-tree-links dtol-tree-empty">';
+            $output .= '<div class="lh-tree-links lh-tree-empty">';
             $output .= '<p>' . __('No links have been added to this tree yet.', 'linkhub') . '</p>';
             $output .= '</div>';
             $output .= '</div>';
@@ -140,7 +119,7 @@ class TreeRenderer {
         }
 
         // Render links section
-        $output .= '<div class="dtol-tree-links">';
+        $output .= '<div class="lh-tree-links">';
 
         foreach ($tree_links as $tree_link) {
             // Check if it's a heading
@@ -149,14 +128,14 @@ class TreeRenderer {
                 $heading_size = isset($tree_link['size']) ? $tree_link['size'] : 'medium';
                 
                 $size_classes = [
-                    'small' => 'dtol-heading-small',
-                    'medium' => 'dtol-heading-medium',
-                    'large' => 'dtol-heading-large'
+                    'small' => 'lh-heading-small',
+                    'medium' => 'lh-heading-medium',
+                    'large' => 'lh-heading-large'
                 ];
                 $size_class = isset($size_classes[$heading_size]) ? $size_classes[$heading_size] : $size_classes['medium'];
                 
                 $output .= sprintf(
-                    '<div class="dtol-heading %s">%s</div>',
+                    '<div class="lh-heading %s">%s</div>',
                     esc_attr($size_class),
                     esc_html($heading_text)
                 );
@@ -180,8 +159,8 @@ class TreeRenderer {
             $output .= LinkTypeRenderer::render($link_id, $design_override, $heading_size);
         }
 
-        $output .= '</div>'; // Close dtol-tree-links
-        $output .= '</div>'; // Close dtol-tree
+        $output .= '</div>'; // Close lh-tree-links
+        $output .= '</div>'; // Close lh-tree
 
         return $output;
     }
@@ -195,16 +174,58 @@ class TreeRenderer {
      * @param string $title_color Title text color
      * @param string $bio_color Bio text color
      * @param string $social_color Social icon color
+     * @param string $link_bg_color Link button background color
+     * @param string $link_text_color Link button text color
+     * @param string $title_font Title font family
+     * @param string $body_font Body/content font family
      * @return string Style tag with CSS
      */
-    private static function build_page_styles($background_color, $tree_background_color, $background_image_id, $title_color, $bio_color, $social_color) {
+    private static function build_page_styles($background_color, $tree_background_color, $background_image_id, $title_color, $bio_color, $social_color, $link_bg_color, $link_text_color, $title_font, $body_font) {
+        // Enqueue Google Fonts if needed
+        $google_fonts = [];
+        if (in_array($title_font, ['poppins', 'montserrat', 'playfair', 'raleway'])) {
+            $google_fonts[] = $title_font;
+        }
+        if (in_array($body_font, ['opensans', 'roboto', 'lato', 'merriweather'])) {
+            $google_fonts[] = $body_font;
+        }
+        
+        if (!empty($google_fonts)) {
+            $font_map = [
+                'poppins' => 'Poppins:400,600,700',
+                'montserrat' => 'Montserrat:400,600,700',
+                'playfair' => 'Playfair+Display:400,600,700',
+                'raleway' => 'Raleway:400,600,700',
+                'opensans' => 'Open+Sans:400,600,700',
+                'roboto' => 'Roboto:400,500,700',
+                'lato' => 'Lato:400,700',
+                'merriweather' => 'Merriweather:400,700'
+            ];
+            
+            $fonts_query = [];
+            foreach ($google_fonts as $font) {
+                if (isset($font_map[$font])) {
+                    $fonts_query[] = $font_map[$font];
+                }
+            }
+            
+            if (!empty($fonts_query)) {
+                $google_fonts_url = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $fonts_query) . '&display=swap';
+                wp_enqueue_style('lh-google-fonts', $google_fonts_url, [], null);
+            }
+        }
+        
+        // Get font stacks
+        $title_font_stack = self::get_font_stack($title_font);
+        $body_font_stack = self::get_font_stack($body_font);
+        
         $styles = '<style>';
 
         // CSS variable for tree background color (used by fade effect)
-        $styles .= ':root { --dtol-bg-color: ' . esc_attr($tree_background_color) . '; }';
+        $styles .= ':root { --lh-bg-color: ' . esc_attr($tree_background_color) . '; }';
 
         // Page background (outer area - visible on desktop sides)
-        $styles .= 'body.single-LH_tree { background-color: ' . esc_attr($background_color) . ';';
+        $styles .= 'body.single-lh_tree { background-color: ' . esc_attr($background_color) . ' !important;';
         if ($background_image_id) {
             $bg_url = wp_get_attachment_url($background_image_id);
             if ($bg_url) {
@@ -215,19 +236,57 @@ class TreeRenderer {
 
         // Tree/content area background
         $styles .= '.lh-tree { background-color: ' . esc_attr($tree_background_color) . '; }';
+        
+        // Avatar container background (to match tree for rounded corners)
+        $styles .= '.lh-tree-avatar { background-color: ' . esc_attr($tree_background_color) . ' !important; }';
 
-        // Title color
-        $styles .= '.lh-tree-title { color: ' . esc_attr($title_color) . '; }';
+        // Title color and font
+        $styles .= '.lh-tree-title { color: ' . esc_attr($title_color) . ' !important; font-family: ' . $title_font_stack . '; }';
 
-        // Bio text color
-        $styles .= '.lh-tree-about, .lh-tree-about p { color: ' . esc_attr($bio_color) . '; }';
+        // Bio text color and font
+        $styles .= '.lh-tree-about, .lh-tree-about p { color: ' . esc_attr($bio_color) . ' !important; font-family: ' . $body_font_stack . '; }';
 
         // Social icon color
-        $styles .= '.lh-social-item a { color: ' . esc_attr($social_color) . '; }';
+        $styles .= '.lh-social-item a { color: ' . esc_attr($social_color) . ' !important; }';
+
+        // Link button colors and font (bar style)
+        $styles .= '.lh-bar-link { background-color: ' . esc_attr($link_bg_color) . ' !important; color: ' . esc_attr($link_text_color) . ' !important; font-family: ' . $body_font_stack . '; border-color: ' . esc_attr($link_text_color) . ' !important; }';
+        
+        // Link button hover effect - darken background by 10%
+        $styles .= '.lh-bar-link:hover { filter: brightness(0.9); }';
+        
+        // Link button colors and font (card style)
+        $styles .= '.lh-card-banner { background-color: ' . esc_attr($link_bg_color) . ' !important; color: ' . esc_attr($link_text_color) . ' !important; font-family: ' . $body_font_stack . '; }';
+        $styles .= '.lh-card-link { border-color: ' . esc_attr($link_text_color) . ' !important; }';
 
         $styles .= '</style>';
 
         return $styles;
+    }
+
+    /**
+     * Get font stack for a given font choice
+     *
+     * @param string $font Font choice
+     * @return string CSS font-family value
+     */
+    private static function get_font_stack($font) {
+        $stacks = [
+            'system' => '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            'serif' => 'Georgia, "Times New Roman", Times, serif',
+            'sans' => 'Arial, Helvetica, sans-serif',
+            'mono' => '"Courier New", Courier, monospace',
+            'poppins' => '"Poppins", -apple-system, BlinkMacSystemFont, sans-serif',
+            'montserrat' => '"Montserrat", -apple-system, BlinkMacSystemFont, sans-serif',
+            'playfair' => '"Playfair Display", Georgia, serif',
+            'raleway' => '"Raleway", -apple-system, BlinkMacSystemFont, sans-serif',
+            'opensans' => '"Open Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+            'roboto' => '"Roboto", -apple-system, BlinkMacSystemFont, sans-serif',
+            'lato' => '"Lato", -apple-system, BlinkMacSystemFont, sans-serif',
+            'merriweather' => '"Merriweather", Georgia, serif'
+        ];
+        
+        return isset($stacks[$font]) ? $stacks[$font] : $stacks['system'];
     }
 
     /**
@@ -239,26 +298,42 @@ class TreeRenderer {
      * @param string $hero_fade Whether to show fade effect
      * @return string HTML output
      */
-    private static function render_tree_header($post, $header_image_id, $about_text, $hero_fade = '0') {
-        $output = '<div class="dtol-tree-header">';
+    private static function render_tree_header($post, $header_image_id, $header_image_url, $about_text, $hero_fade = '0') {
+        $output = '<div class="lh-tree-header">';
 
         // Header/profile image
-        if ($header_image_id) {
-            $fade_class = ($hero_fade === '1') ? ' dtol-avatar-fade' : '';
-            $output .= '<div class="dtol-tree-avatar' . $fade_class . '">';
-            $output .= wp_get_attachment_image($header_image_id, 'large', false, [
-                'class' => 'dtol-avatar-image',
-                'alt' => esc_attr($post->post_title),
-            ]);
+        if ($header_image_id || $header_image_url) {
+            $fade_class = ($hero_fade === '1') ? ' lh-avatar-fade' : '';
+            $output .= '<div class="lh-tree-avatar' . $fade_class . '">';
+            
+            if ($header_image_id) {
+                // Remove width/height attributes for responsive images
+                add_filter('wp_get_attachment_image_attributes', function($attr) {
+                    unset($attr['width']);
+                    unset($attr['height']);
+                    return $attr;
+                }, 10);
+                
+                $output .= wp_get_attachment_image($header_image_id, 'large', false, [
+                    'class' => 'lh-avatar-image',
+                    'alt' => esc_attr($post->post_title),
+                ]);
+                
+                // Remove the filter after use
+                remove_all_filters('wp_get_attachment_image_attributes', 10);
+            } elseif ($header_image_url) {
+                $output .= '<img src="' . esc_url($header_image_url) . '" class="lh-avatar-image" alt="' . esc_attr($post->post_title) . '">';
+            }
+            
             $output .= '</div>';
         }
 
         // Tree title
-        $output .= '<h1 class="dtol-tree-title">' . esc_html($post->post_title) . '</h1>';
+        $output .= '<h1 class="lh-tree-title">' . esc_html($post->post_title) . '</h1>';
 
         // About text
         if (!empty($about_text)) {
-            $output .= '<div class="dtol-tree-about">';
+            $output .= '<div class="lh-tree-about">';
             $output .= wp_kses_post(wpautop($about_text));
             $output .= '</div>';
         }
@@ -293,8 +368,8 @@ class TreeRenderer {
             'website' => '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm1 16.057v-3.057h2.994c-.059 1.143-.212 2.24-.456 3.279-.823-.12-1.674-.188-2.538-.222zm1.957 2.162c-.499 1.33-1.159 2.497-1.957 3.456v-3.62c.666.028 1.319.081 1.957.164zm-1.957-7.219v-3.015c.868-.034 1.721-.103 2.548-.224.238 1.027.389 2.111.446 3.239h-2.994zm0-5.014v-3.661c.806.969 1.471 2.15 1.971 3.496-.642.084-1.3.137-1.971.165zm2.703-3.267c1.237.496 2.354 1.228 3.29 2.146-.642.234-1.311.442-2.019.607-.344-.992-.775-1.91-1.271-2.753zm-7.241 13.56c-.244-1.039-.398-2.136-.456-3.279h2.994v3.057c-.865.034-1.714.102-2.538.222zm2.538 1.776v3.62c-.798-.959-1.458-2.126-1.957-3.456.638-.083 1.291-.136 1.957-.164zm-2.994-7.055c.057-1.128.207-2.212.446-3.239.827.121 1.68.19 2.548.224v3.015h-2.994zm1.024-5.179c.5-1.346 1.165-2.527 1.97-3.496v3.661c-.671-.028-1.329-.081-1.97-.165zm-2.005-.35c-.708-.165-1.377-.373-2.018-.607.937-.918 2.053-1.65 3.29-2.146-.496.844-.927 1.762-1.272 2.753zm-.549 1.918c-.264 1.151-.434 2.36-.492 3.611h-3.933c.165-1.658.739-3.197 1.617-4.518.88.361 1.816.67 2.808.907zm.009 9.262c-.988.236-1.92.542-2.797.9-.89-1.328-1.471-2.879-1.637-4.551h3.934c.058 1.265.231 2.488.5 3.651zm.553 1.917c.342.976.768 1.881 1.257 2.712-1.223-.49-2.326-1.211-3.256-2.115.636-.229 1.299-.435 1.999-.597zm9.924 0c.7.163 1.362.367 1.999.597-.931.903-2.034 1.625-3.257 2.116.489-.832.915-1.737 1.258-2.713zm.553-1.917c.27-1.163.442-2.386.501-3.651h3.934c-.167 1.672-.748 3.223-1.638 4.551-.877-.358-1.81-.664-2.797-.9zm.501-5.651c-.058-1.251-.229-2.46-.492-3.611.992-.237 1.929-.546 2.809-.907.877 1.321 1.451 2.86 1.616 4.518h-3.933z"/></svg>',
         ];
 
-        $output = '<div class="dtol-social-links">';
-        $output .= '<ul class="dtol-social-list">';
+        $output = '<div class="lh-social-links">';
+        $output .= '<ul class="lh-social-list">';
 
         foreach ($social_links as $social) {
             $platform = $social['platform'] ?? '';
@@ -308,7 +383,7 @@ class TreeRenderer {
             $label = ucfirst($platform);
 
             $output .= sprintf(
-                '<li class="dtol-social-item dtol-social-%s"><a href="%s" target="_blank" rel="noopener noreferrer" aria-label="%s">%s</a></li>',
+                '<li class="lh-social-item lh-social-%s"><a href="%s" target="_blank" rel="noopener noreferrer" aria-label="%s">%s</a></li>',
                 esc_attr($platform),
                 esc_url($url),
                 esc_attr($label),
@@ -322,3 +397,4 @@ class TreeRenderer {
         return $output;
     }
 }
+

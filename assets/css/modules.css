@@ -1,4 +1,75 @@
-﻿/* Tree of Links Module Styles */
+/* Tree of Links Module Styles */
+
+/* Hide default WordPress post elements on ALL tree pages */
+.lh-tree-page .entry-header,
+.lh-tree-page .entry-meta,
+.lh-tree-page .entry-footer,
+.lh-tree-page .post-navigation,
+.lh-tree-page .author-info,
+.lh-tree-page .page-header,
+.lh-tree-page .entry-title,
+.lh-tree-page .posted-on,
+.lh-tree-page .byline,
+.lh-tree-page .cat-links,
+.lh-tree-page .tags-links,
+.lh-tree-page .comments-link,
+.lh-tree-page .edit-link,
+.lh-tree-page h1.entry-title,
+.lh-tree-page .post-meta,
+.lh-tree-page .author-bio {
+    display: none !important;
+}
+
+/* Hide theme header/footer when blank template mode is enabled */
+.lh-blank-template #page-header,
+.lh-blank-template #main-header,
+.lh-blank-template .site-header,
+.lh-blank-template #site-header,
+.lh-blank-template header:not(#wpadminbar):not(.admin-bar),
+.lh-blank-template #masthead,
+.lh-blank-template .navbar,
+.lh-blank-template #site-navigation,
+.lh-blank-template #main-footer,
+.lh-blank-template .site-footer,
+.lh-blank-template #site-footer,
+.lh-blank-template footer:not(#wpadminbar):not(.admin-bar),
+.lh-blank-template #colophon,
+.lh-blank-template .site-info,
+.lh-blank-template #sidebar,
+.lh-blank-template .sidebar,
+.lh-blank-template aside,
+.lh-blank-template .breadcrumbs,
+.lh-blank-template .breadcrumb,
+.lh-blank-template nav:not(#wpadminbar):not(.admin-bar) {
+    display: none !important;
+}
+
+/* Never hide admin bar */
+#wpadminbar {
+    display: block !important;
+}
+
+/* Ensure blank template has clean layout */
+.lh-blank-template {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.lh-blank-template #content,
+.lh-blank-template .site-content,
+.lh-blank-template #main,
+.lh-blank-template main,
+.lh-blank-template .content-area,
+.lh-blank-template article,
+.lh-blank-template .hentry {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
 
 /* Base Container */
 .lh-tree-of-links {
@@ -25,16 +96,18 @@
 .lh-bar-style .lh-bar-link {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
-    border-radius: 8px;
+    padding: 16px 20px;
+    border-radius: 12px;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     position: relative;
+    border: 2px solid;
+    box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.2);
 }
 
 .lh-bar-style .lh-bar-link:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.2);
 }
 
 /* Thumbnail on left */
@@ -71,7 +144,7 @@
     flex: 1;
     text-align: center;
     font-weight: 600;
-    font-size: clamp(0.875rem, 2vw, 1rem);
+    font-size: clamp(0.875rem, 3.5vw, 1.125rem);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -97,13 +170,14 @@
     text-decoration: none;
     border-radius: 12px;
     overflow: hidden;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 2px solid;
+    box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.2);
 }
 
 .lh-card-style .lh-card-link:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.2);
 }
 
 /* Full-width image */
@@ -301,11 +375,126 @@
 /* Main tree container */
 .lh-tree {
     width: 100%;
-    max-width: 680px;
+    max-width: 576px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 20px 20px 20px;
     min-height: 100vh;
     box-sizing: border-box;
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
+}
+
+/* Mobile: Full width with no padding on sides */
+@media (max-width: 768px) {
+    body.lh-tree-page {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    body.admin-bar.lh-tree-page {
+        padding-top: 46px !important;
+    }
+    
+    .lh-tree {
+        max-width: 100%;
+        width: 100%;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0;
+    }
+    
+    .lh-tree-header {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    
+    .lh-tree-avatar {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .lh-tree-avatar .lh-avatar-image {
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        display: block !important;
+        border-radius: 0 !important;
+    }
+    
+    /* Remove all border radius on mobile */
+    .lh-hero-rounded .lh-avatar-image,
+    .lh-hero-round .lh-avatar-image,
+    .lh-hero-square .lh-avatar-image {
+        border-radius: 0 !important;
+    }
+    
+    /* Remove border radius from fade effect on mobile */
+    .lh-hero-rounded .lh-avatar-fade::after,
+    .lh-hero-round .lh-avatar-fade::after {
+        border-radius: 0 !important;
+    }
+    
+    /* Add spacing after avatar on mobile */
+    .lh-tree-title {
+        margin-top: 16px !important;
+    }
+}
+
+/* Remove top padding/margin when tree is at page top */
+.lh-tree-page .site-content,
+.lh-tree-page #content,
+.lh-tree-page main,
+.lh-tree-page article,
+.lh-tree-page .content-area,
+.lh-tree-page .entry-content {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* On mobile, remove ALL padding from WordPress containers */
+@media (max-width: 768px) {
+    .lh-tree-page .site-content,
+    .lh-tree-page #content,
+    .lh-tree-page main,
+    .lh-tree-page article,
+    .lh-tree-page .content-area,
+    .lh-tree-page .entry-content {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    body.lh-tree-page {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    body.admin-bar.lh-tree-page {
+        padding-top: 46px !important;
+    }
+}
+
+/* Ensure tree background starts at top of page (but allow for admin bar) */
+body.lh-tree-page {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Keep admin bar space when logged in */
+body.admin-bar.lh-tree-page {
+    padding-top: 32px !important;
+}
+
+@media screen and (max-width: 782px) {
+    body.admin-bar.lh-tree-page {
+        padding-top: 46px !important;
+    }
+}
+
+.lh-tree {
+    margin-top: 0 !important;
 }
 
 /* Tree Header Section */
@@ -315,6 +504,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding-top: 0;
+    margin-left: -20px;
+    margin-right: -20px;
+    margin-top: 0;
 }
 
 .lh-tree-avatar {
@@ -322,7 +515,8 @@
     position: relative;
     display: block;
     width: 100%;
-    max-width: 400px;
+    max-width: none;
+    background-color: var(--lh-bg-color, #f5f5f5);
 }
 
 .lh-tree-avatar .lh-avatar-image {
@@ -358,8 +552,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 50%;
-    background: linear-gradient(to bottom, transparent 0%, var(--dtol-bg-color, #f5f5f5) 100%);
+    height: 25%;
+    background: linear-gradient(to bottom, transparent 0%, var(--lh-bg-color, #f5f5f5) 100%);
     pointer-events: none;
 }
 
@@ -378,6 +572,7 @@
     font-size: clamp(1.5rem, 5vw, 2rem);
     font-weight: 700;
     color: #1a1a1a;
+    padding: 0 20px;
 }
 
 .lh-tree-about {
@@ -386,6 +581,7 @@
     line-height: 1.6;
     max-width: 500px;
     margin: 0 auto;
+    padding: 0 20px;
 }
 
 .lh-tree-about p {
@@ -399,6 +595,7 @@
 /* Social Links Bar */
 .lh-social-links {
     margin: 20px 0 30px 0;
+    padding: 0 20px;
 }
 
 .lh-social-list {
@@ -522,6 +719,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    padding: 0 20px;
 }
 
 .lh-tree-links.lh-tree-empty {
@@ -538,7 +736,7 @@
 }
 
 /* Heading Styles */
-.dtol-heading {
+.lh-heading {
     text-align: center;
     font-weight: 600;
     color: #333;
@@ -547,17 +745,17 @@
     letter-spacing: 0.5px;
 }
 
-.dtol-heading-small {
+.lh-heading-small {
     font-size: 14px;
     margin: 16px 0 8px 0;
 }
 
-.dtol-heading-medium {
+.lh-heading-medium {
     font-size: 18px;
     margin: 24px 0 12px 0;
 }
 
-.dtol-heading-large {
+.lh-heading-large {
     font-size: 24px;
     margin: 32px 0 16px 0;
 }

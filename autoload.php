@@ -1,13 +1,13 @@
-﻿<?php
+<?php
 /**
  * Simple PSR-4 Autoloader (fallback if Composer not available)
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
 spl_autoload_register(function ($class) {
     // Project-specific namespace prefix
-    $prefix = 'ElyseVIP\\LinkHub\\';
+    $prefix = 'LinkHub\\';
     
     // Base directory for the namespace prefix
     $base_dir = __DIR__ . '/includes/';

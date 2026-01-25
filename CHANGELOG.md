@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-25
+
+### Added
+- **New Tree Builder Admin UI**: Complete redesign with modern three-panel layout
+  - Left sidebar with tree list and settings navigation
+  - Main editor panel with draggable link cards
+  - Live preview panel with iPhone-style frame
+- **Sidebar Navigation**: Settings organized into separate views (Links, Profile, Social Links, Appearance, Display)
+- **REST API**: Full CRUD endpoints for trees and links (`/linkhub/v1/trees`, `/linkhub/v1/links`)
+- **Inline Edit Modals**: Edit links and headings via modal popups without leaving the page
+- **Auto-save**: Changes automatically saved with visual status indicator
+- **Media Library Integration**: Upload images directly from Tree Builder
+- **Create Links Inline**: Add new links without leaving Tree Builder
+- **Live Preview**: Real-time iframe preview updates on every change
+
+### Changed
+- Settings panel restructured from accordion to sidebar navigation
+- Improved drag-and-drop with better visual feedback
+- Tree Builder accessible via "Link Trees → Tree Builder" submenu
+
+### Removed
+- Divi-specific rendering code from TreeRenderer.php
+
 ## [0.2.0] - 2026-01-23
 
 ### Added

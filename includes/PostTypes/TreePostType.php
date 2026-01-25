@@ -1,11 +1,11 @@
-﻿<?php
+<?php
 /**
  * Tree Custom Post Type
  *
- * @package ElyseVIP\LinkHub
+ * @package LinkHub
  */
 
-namespace ElyseVIP\LinkHub\PostTypes;
+namespace LinkHub\PostTypes;
 
 /**
  * Tree Post Type Class
@@ -15,7 +15,7 @@ class TreePostType {
     /**
      * Post type slug
      */
-    const POST_TYPE = 'LH_tree';
+    const POST_TYPE = 'lh_tree';
     
     /**
      * Meta key for tree links with design overrides
@@ -85,9 +85,88 @@ class TreePostType {
     const META_SOCIAL_COLOR = '_LH_social_color';
 
     /**
+     * Meta key for link button background color
+     */
+    const META_LINK_BACKGROUND_COLOR = '_LH_link_background_color';
+
+    /**
+     * Meta key for link button text color
+     */
+    const META_LINK_TEXT_COLOR = '_LH_link_text_color';
+
+    /**
+     * Meta key for title font family
+     */
+    const META_TITLE_FONT = '_LH_title_font';
+
+    /**
+     * Meta key for body/content font family
+     */
+    const META_BODY_FONT = '_LH_body_font';
+
+    /**
+     * Meta key for hiding site header/footer (boolean)
+     */
+    const META_HIDE_HEADER_FOOTER = '_LH_hide_header_footer';
+
+    /**
      * Meta key for heading/divider text size (small, medium, large)
      */
     const META_HEADING_SIZE = '_LH_heading_size';
+
+    /**
+     * Initialize the post type
+     */
+    public static function init() {
+        add_action('init', [self::class, 'register']);
+        add_filter('template_include', [self::class, 'maybe_use_blank_template'], 999);
+        add_filter('body_class', [self::class, 'add_body_class']);
+    }
+
+    /**
+     * Add body class to tree pages for CSS targeting
+     */
+    public static function add_body_class($classes) {
+        if (is_singular(self::POST_TYPE)) {
+            $classes[] = 'lh-tree-page';
+            
+            global $post;
+            if ($post) {
+                $hide_header_footer = get_post_meta($post->ID, self::META_HIDE_HEADER_FOOTER, true);
+                
+                if ($hide_header_footer === '1') {
+                    $classes[] = 'lh-blank-template';
+                }
+            }
+        }
+        return $classes;
+    }
+
+    /**
+     * Use blank template if option is enabled
+     */
+    public static function maybe_use_blank_template($template) {
+        if (!is_singular(self::POST_TYPE)) {
+            return $template;
+        }
+
+        global $post;
+        if (!$post) {
+            return $template;
+        }
+
+        $hide_header_footer = get_post_meta($post->ID, self::META_HIDE_HEADER_FOOTER, true);
+        
+        if ($hide_header_footer === '1') {
+            $blank_template = LH_PLUGIN_DIR . 'includes/templates/blank-tree-template.php';
+            
+            if (file_exists($blank_template)) {
+                return $blank_template;
+            }
+        }
+        
+        return $template;
+    }
 
     /**
      * Register the Tree custom post type
@@ -154,3 +233,4 @@ class TreePostType {
         register_post_type(self::POST_TYPE, $args);
     }
 }
+
