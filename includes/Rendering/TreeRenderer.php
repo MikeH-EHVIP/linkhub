@@ -328,8 +328,17 @@ class TreeRenderer {
             $output .= '</div>';
         }
 
-        // Tree title
-        $output .= '<h1 class="lh-tree-title">' . esc_html($post->post_title) . '</h1>';
+        // Tree title with inline edit button for authorized users
+        $output .= '<h1 class="lh-tree-title">' . esc_html($post->post_title);
+        
+        if (current_user_can('edit_post', $post->ID)) {
+            $edit_url = admin_url('admin.php?page=lh-tree-builder');
+            $output .= '<a href="' . esc_url($edit_url) . '" class="lh-tree-edit-icon" title="' . esc_attr__('Edit Tree', 'linkhub') . '">';
+            $output .= '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+            $output .= '</a>';
+        }
+        
+        $output .= '</h1>';
 
         // About text
         if (!empty($about_text)) {

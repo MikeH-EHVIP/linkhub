@@ -405,6 +405,13 @@
     border-bottom: 1px solid var(--lh-border-light);
 }
 
+.lh-form-description {
+    margin: 0 0 16px;
+    color: var(--lh-text-light);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 /* Add Buttons */
 .lh-add-buttons {
     display: flex;
@@ -1033,4 +1040,36 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* ============================================
+   Danger Zone
+   ============================================ */
+.lh-danger-zone-title {
+    color: var(--lh-danger) !important;
+    border-color: var(--lh-danger) !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lh-danger-zone {
+    background: #fef7f7;
+    border: 2px solid #f0b8b8;
+    border-radius: var(--lh-radius);
+    padding: 20px;
+}
+
+.lh-danger-zone .lh-form-description {
+    color: #8b0000;
+    font-weight: 500;
+}
+
+.lh-danger-zone input[type="text"] {
+    border-color: var(--lh-danger);
+}
+
+.lh-danger-zone input[type="text"]:focus {
+    border-color: var(--lh-danger);
+    box-shadow: 0 0 0 1px var(--lh-danger);
 }

@@ -13,31 +13,12 @@ if (!defined('ABSPATH')) {
 <div class="wrap lh-tree-builder-wrap">
     <div class="lh-tree-builder" id="lh-tree-builder" data-tree-id="<?php echo esc_attr($tree_id); ?>">
 
-        <!-- Left Sidebar: Tree List & Navigation -->
+        <!-- Left Sidebar: Settings Navigation -->
         <aside class="lh-builder-sidebar">
-            <div class="lh-sidebar-section">
-                <div class="lh-sidebar-header">
-                    <h3><?php esc_html_e('Link Trees', 'linkhub'); ?></h3>
-                    <button type="button" class="lh-btn lh-btn-small lh-btn-primary" id="lh-new-tree-btn">
-                        <span class="dashicons dashicons-plus-alt2"></span>
-                    </button>
-                </div>
-                <ul class="lh-tree-list" id="lh-tree-list">
-                    <li class="lh-loading"><?php esc_html_e('Loading...', 'linkhub'); ?></li>
-                </ul>
-            </div>
-
-            <!-- Tree Settings Nav (shown when tree is loaded) -->
-            <div class="lh-sidebar-section lh-tree-settings-nav" id="lh-tree-settings-nav" style="display: none;">
+            <div class="lh-sidebar-section lh-tree-settings-nav" id="lh-tree-settings-nav">
                 <h3><?php esc_html_e('Tree Settings', 'linkhub'); ?></h3>
                 <ul class="lh-settings-nav-list">
                     <li class="active">
-                        <button type="button" data-view="links">
-                            <span class="dashicons dashicons-admin-links"></span>
-                            <?php esc_html_e('Links', 'linkhub'); ?>
-                        </button>
-                    </li>
-                    <li>
                         <button type="button" data-view="profile">
                             <span class="dashicons dashicons-admin-users"></span>
                             <?php esc_html_e('Profile', 'linkhub'); ?>
@@ -50,40 +31,22 @@ if (!defined('ABSPATH')) {
                         </button>
                     </li>
                     <li>
+                        <button type="button" data-view="links">
+                            <span class="dashicons dashicons-admin-links"></span>
+                            <?php esc_html_e('Links', 'linkhub'); ?>
+                        </button>
+                    </li>
+                    <li>
                         <button type="button" data-view="appearance">
                             <span class="dashicons dashicons-art"></span>
                             <?php esc_html_e('Appearance', 'linkhub'); ?>
                         </button>
                     </li>
                     <li>
-                        <button type="button" data-view="display">
-                            <span class="dashicons dashicons-visibility"></span>
-                            <?php esc_html_e('Display', 'linkhub'); ?>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="lh-sidebar-section lh-sidebar-nav">
-                <h3><?php esc_html_e('Navigation', 'linkhub'); ?></h3>
-                <ul class="lh-nav-list">
-                    <li>
-                        <a href="<?php echo esc_url(admin_url('edit.php?post_type=lh_tree')); ?>">
-                            <span class="dashicons dashicons-list-view"></span>
-                            <?php esc_html_e('All Trees', 'linkhub'); ?>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="<?php echo esc_url(admin_url('edit.php?post_type=lh_link')); ?>">
-                            <span class="dashicons dashicons-admin-links"></span>
-                            <?php esc_html_e('All Links', 'linkhub'); ?>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=lh-export-import')); ?>">
+                        <button type="button" data-view="import-export">
                             <span class="dashicons dashicons-download"></span>
                             <?php esc_html_e('Import / Export', 'linkhub'); ?>
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -94,8 +57,8 @@ if (!defined('ABSPATH')) {
             <div class="lh-builder-empty" id="lh-builder-empty">
                 <div class="lh-empty-state">
                     <span class="dashicons dashicons-networking"></span>
-                    <h2><?php esc_html_e('Select a Tree', 'linkhub'); ?></h2>
-                    <p><?php esc_html_e('Choose a tree from the sidebar or create a new one to get started.', 'linkhub'); ?></p>
+                    <h2><?php esc_html_e('Loading...', 'linkhub'); ?></h2>
+                    <p><?php esc_html_e('Setting up your link tree.', 'linkhub'); ?></p>
                 </div>
             </div>
 
@@ -107,14 +70,17 @@ if (!defined('ABSPATH')) {
                         <span class="lh-status-badge" id="lh-tree-status"></span>
                     </div>
                     <div class="lh-header-actions">
-                        <span class="lh-save-status" id="lh-save-status"></span>
+                        <button type="button" id="lh-save-btn" class="lh-btn lh-btn-primary" disabled>
+                            <span class="dashicons dashicons-saved"></span>
+                            <?php esc_html_e('Save Changes', 'linkhub'); ?>
+                        </button>
+                        <button type="button" id="lh-publish-btn" class="lh-btn lh-btn-primary">
+                            <span class="dashicons dashicons-yes"></span>
+                            <?php esc_html_e('Publish', 'linkhub'); ?>
+                        </button>
                         <a href="#" id="lh-view-tree-btn" class="lh-btn lh-btn-secondary" target="_blank">
                             <span class="dashicons dashicons-external"></span>
                             <?php esc_html_e('View', 'linkhub'); ?>
-                        </a>
-                        <a href="#" id="lh-classic-editor-btn" class="lh-btn lh-btn-secondary">
-                            <span class="dashicons dashicons-edit"></span>
-                            <?php esc_html_e('Classic Editor', 'linkhub'); ?>
                         </a>
                     </div>
                 </header>
@@ -166,6 +132,11 @@ if (!defined('ABSPATH')) {
                         <div class="lh-form-group">
                             <label for="lh-about-text"><?php esc_html_e('Bio / About Text', 'linkhub'); ?></label>
                             <textarea id="lh-about-text" rows="3" placeholder="<?php esc_attr_e('Tell visitors about yourself...', 'linkhub'); ?>"></textarea>
+                        </div>
+                        <div class="lh-form-group">
+                            <label for="lh-tree-slug"><?php esc_html_e('Page URL (slug)', 'linkhub'); ?></label>
+                            <input type="text" id="lh-tree-slug" placeholder="<?php esc_attr_e('my-links', 'linkhub'); ?>">
+                            <p class="lh-form-description"><?php esc_html_e('This will be the URL path: /links/your-slug', 'linkhub'); ?></p>
                         </div>
                         <div class="lh-form-group">
                             <label><?php esc_html_e('Hero Image Shape', 'linkhub'); ?></label>
@@ -276,16 +247,8 @@ if (!defined('ABSPATH')) {
                                 <option value="large"><?php esc_html_e('Large', 'linkhub'); ?></option>
                             </select>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Display View -->
-                <div class="lh-view lh-view-display" id="lh-view-display" style="display: none;">
-                    <div class="lh-view-header">
-                        <h2><?php esc_html_e('Display Options', 'linkhub'); ?></h2>
-                        <p class="lh-view-description"><?php esc_html_e('Configure how your link tree page is displayed.', 'linkhub'); ?></p>
-                    </div>
-                    <div class="lh-settings-form">
+                        <h3 class="lh-settings-section-title" style="margin-top: 32px;"><?php esc_html_e('Background', 'linkhub'); ?></h3>
                         <div class="lh-form-group">
                             <label><?php esc_html_e('Background Image', 'linkhub'); ?></label>
                             <div class="lh-image-upload" id="lh-bg-image-upload">
@@ -299,11 +262,72 @@ if (!defined('ABSPATH')) {
                                 <input type="hidden" id="lh-bg-image-id" value="">
                             </div>
                         </div>
+
+                        <h3 class="lh-settings-section-title" style="margin-top: 32px;"><?php esc_html_e('Display', 'linkhub'); ?></h3>
                         <div class="lh-form-group lh-form-group-inline">
                             <label>
                                 <input type="checkbox" id="lh-hide-header-footer">
                                 <?php esc_html_e('Hide site header and footer (clean display)', 'linkhub'); ?>
                             </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Import/Export View -->
+                <div class="lh-view lh-view-import-export" id="lh-view-import-export" style="display: none;">
+                    <div class="lh-view-header">
+                        <h2><?php esc_html_e('Import / Export', 'linkhub'); ?></h2>
+                        <p class="lh-view-description"><?php esc_html_e('Export your tree data or import from another source.', 'linkhub'); ?></p>
+                    </div>
+                    <div class="lh-settings-form">
+                        <h3 class="lh-settings-section-title"><?php esc_html_e('Export', 'linkhub'); ?></h3>
+                        <p class="lh-form-description"><?php esc_html_e('Download your tree settings and links as a JSON file.', 'linkhub'); ?></p>
+                        <button type="button" class="lh-btn lh-btn-secondary" id="lh-export-btn">
+                            <span class="dashicons dashicons-download"></span>
+                            <?php esc_html_e('Export Tree', 'linkhub'); ?>
+                        </button>
+
+                        <h3 class="lh-settings-section-title" style="margin-top: 32px;"><?php esc_html_e('Import', 'linkhub'); ?></h3>
+                        <p class="lh-form-description"><?php esc_html_e('Import tree data from a JSON file or migrate from Clickwhale.', 'linkhub'); ?></p>
+                        <div class="lh-form-group">
+                            <label for="lh-import-file"><?php esc_html_e('Select File', 'linkhub'); ?></label>
+                            <input type="file" id="lh-import-file" accept=".json">
+                        </div>
+                        <button type="button" class="lh-btn lh-btn-secondary" id="lh-import-btn" disabled>
+                            <span class="dashicons dashicons-upload"></span>
+                            <?php esc_html_e('Import', 'linkhub'); ?>
+                        </button>
+
+                        <h3 class="lh-settings-section-title" style="margin-top: 32px;"><?php esc_html_e('Clickwhale Migration', 'linkhub'); ?></h3>
+                        <p class="lh-form-description"><?php esc_html_e('Import links from a Clickwhale CSV export file.', 'linkhub'); ?></p>
+                        <div class="lh-form-group">
+                            <label for="lh-import-clickwhale-file"><?php esc_html_e('Clickwhale CSV File', 'linkhub'); ?></label>
+                            <input type="file" id="lh-import-clickwhale-file" accept=".csv">
+                        </div>
+                        <button type="button" class="lh-btn lh-btn-secondary" id="lh-import-clickwhale-btn" disabled>
+                            <span class="dashicons dashicons-migrate"></span>
+                            <?php esc_html_e('Import from CSV', 'linkhub'); ?>
+                        </button>
+                        <p class="lh-form-description" style="margin-top: 12px;">
+                            <?php esc_html_e('Expected columns: title/name, url/destination, clicks (optional), icon (optional)', 'linkhub'); ?>
+                        </p>
+
+                        <h3 class="lh-settings-section-title lh-danger-zone-title" style="margin-top: 48px;">
+                            <span class="dashicons dashicons-warning"></span>
+                            <?php esc_html_e('Danger Zone', 'linkhub'); ?>
+                        </h3>
+                        <div class="lh-danger-zone">
+                            <p class="lh-form-description">
+                                <?php esc_html_e('Permanently delete all links and reset your LinkHub to start fresh. This action cannot be undone.', 'linkhub'); ?>
+                            </p>
+                            <div class="lh-form-group">
+                                <label for="lh-reset-confirm"><?php esc_html_e('Type DELETE to confirm', 'linkhub'); ?></label>
+                                <input type="text" id="lh-reset-confirm" placeholder="DELETE" autocomplete="off">
+                            </div>
+                            <button type="button" class="lh-btn lh-btn-danger" id="lh-reset-all-btn" disabled>
+                                <span class="dashicons dashicons-trash"></span>
+                                <?php esc_html_e('Delete All Data', 'linkhub'); ?>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -500,23 +524,3 @@ if (!defined('ABSPATH')) {
     </div>
 </div>
 
-<!-- Create Tree Modal -->
-<div class="lh-modal" id="lh-create-tree-modal">
-    <div class="lh-modal-overlay"></div>
-    <div class="lh-modal-content">
-        <div class="lh-modal-header">
-            <h3><?php esc_html_e('Create New Tree', 'linkhub'); ?></h3>
-            <button type="button" class="lh-modal-close">&times;</button>
-        </div>
-        <div class="lh-modal-body">
-            <div class="lh-form-group">
-                <label for="lh-new-tree-title"><?php esc_html_e('Tree Name', 'linkhub'); ?></label>
-                <input type="text" id="lh-new-tree-title" placeholder="<?php esc_attr_e('My Link Tree', 'linkhub'); ?>">
-            </div>
-        </div>
-        <div class="lh-modal-footer">
-            <button type="button" class="lh-btn lh-btn-secondary lh-modal-cancel"><?php esc_html_e('Cancel', 'linkhub'); ?></button>
-            <button type="button" class="lh-btn lh-btn-primary" id="lh-create-tree-submit"><?php esc_html_e('Create Tree', 'linkhub'); ?></button>
-        </div>
-    </div>
-</div>

@@ -41,7 +41,8 @@ class ExportImport {
      * Constructor
      */
     private function __construct() {
-        add_action('admin_menu', [$this, 'add_menu_page'], 20);
+        // Menu removed - functionality available in Tree Builder UI
+        // add_action('admin_menu', [$this, 'add_menu_page'], 20);
         add_action('admin_init', [$this, 'handle_export']);
         add_action('admin_init', [$this, 'handle_import']);
         add_action('admin_init', [$this, 'handle_cleanup_duplicates']);
@@ -49,11 +50,11 @@ class ExportImport {
     }
 
     /**
-     * Add submenu page under Trees
+     * Add submenu page under LinkHub
      */
     public function add_menu_page() {
         add_submenu_page(
-            'edit.php?post_type=' . TreePostType::POST_TYPE,
+            'lh-tree-builder',
             __('Export/Import', 'linkhub'),
             __('Export/Import', 'linkhub'),
             'manage_options',

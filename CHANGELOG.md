@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Import/Export Functionality**: Export tree data as JSON and import from JSON files
+- **Clickwhale CSV Migration**: Import links from Clickwhale CSV export files via REST API
+- **Import/Export View**: New dedicated settings view for import/export operations
+- **Danger Zone Reset**: Admin-level option to delete all tree data with safety confirmations
+- **Image Export/Import**: Link images are now included in exports (as URLs) and automatically downloaded on import
+- **Smart Image Handling**: Import checks for existing images in media library before downloading (by URL and filename)
+- **Duplicate Link Prevention**: Import checks for existing links by URL to avoid creating duplicates
+- **Frontend Edit Button**: Inline pencil icon next to tree title for authorized users to access Tree Builder
+
+### Changed
+- **Tree Builder Simplified**: Switched from multi-tree to single-tree mode with auto-creation
+- **Settings Reorganized**: Default view changed from "Links" to "Profile" on Tree Builder load
+- **Menu Structure**: "Link Trees" renamed to "LinkHub" with "Settings" submenu, removed redundant menu items
+- **Appearance Panel Enhanced**: Background image and display options integrated into Appearance view
+- **Form Descriptions Added**: Improved UX with helper text for import/export functions
+- **Edit Links Redirected**: Admin bar and frontend edit links now point to Tree Builder UI instead of classic editor
+- **Build System**: ZIP creation now uses forward slashes for cross-platform (Linux server) compatibility
+
+### Removed
+- **Multi-Tree Support**: Tree list sidebar removed in favor of single auto-managed tree
+- **Display View**: Merged into Appearance view for simpler settings navigation
+- **"Create Tree" Modal**: No longer needed with auto-creation functionality
+- **Separate Menu Items**: "Tree Settings" and "Import/Export" menus consolidated into main LinkHub menu
+
 ## [0.3.0] - 2026-01-25
 
 ### Added

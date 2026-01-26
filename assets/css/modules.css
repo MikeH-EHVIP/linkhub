@@ -1,5 +1,26 @@
 /* Tree of Links Module Styles */
 
+/* Edit Icon Inline with Tree Title */
+.lh-tree-edit-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    color: inherit;
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+    vertical-align: middle;
+    text-decoration: none;
+}
+
+.lh-tree-edit-icon:hover {
+    opacity: 0.8;
+}
+
+.lh-tree-edit-icon svg {
+    display: block;
+}
+
 /* Hide default WordPress post elements on ALL tree pages */
 .lh-tree-page .entry-header,
 .lh-tree-page .entry-meta,

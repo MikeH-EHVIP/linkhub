@@ -118,9 +118,37 @@ class TreePostType {
      * Initialize the post type
      */
     public static function init() {
-        add_action('init', [self::class, 'register']);
-        add_filter('template_include', [self::class, 'maybe_use_blank_template'], 999);
-        add_filter('body_class', [self::class, 'add_body_class']);
+        \add_action('init', [self::class, 'register']);
+        \add_filter('template_include', [self::class, 'maybe_use_blank_template'], 999);
+        \add_filter('body_class', [self::class, 'add_body_class']);
+        \add_filter('get_edit_post_link', [self::class, 'custom_edit_link'], 10, 2);
+        \add_action('admin_bar_menu', [self::class, 'customize_admin_bar_edit_link'], 80);
+    }
+
+    /**
+     * Customize edit link to point to Tree Builder instead of classic editor
+     */
+    public static function custom_edit_link($link, $post_id) {
+        $post = \get_post($post_id);
+        if ($post && $post->post_type === self::POST_TYPE) {
+            return \admin_url('admin.php?page=lh-tree-builder');
+        }
+        return $link;
+    }
+
+    /**
+     * Update admin bar edit link to go to Tree Builder
+     */
+    public static function customize_admin_bar_edit_link($wp_admin_bar) {
+        if (!\is_singular(self::POST_TYPE)) {
+            return;
+        }
+
+        $edit_node = $wp_admin_bar->get_node('edit');
+        if ($edit_node) {
+            $edit_node->href = \admin_url('admin.php?page=lh-tree-builder');
+            $wp_admin_bar->add_node($edit_node);
+        }
     }
 
     /**
@@ -175,7 +203,7 @@ class TreePostType {
         $labels = [
             'name'                  => _x('Link Trees', 'Post Type General Name', 'linkhub'),
             'singular_name'         => _x('Link Tree', 'Post Type Singular Name', 'linkhub'),
-            'menu_name'             => __('Link Trees', 'linkhub'),
+            'menu_name'             => __('LinkHub', 'linkhub'),
             'name_admin_bar'        => __('Link Tree', 'linkhub'),
             'archives'              => __('Link Tree Archives', 'linkhub'),
             'attributes'            => __('Link Tree Attributes', 'linkhub'),
@@ -211,7 +239,7 @@ class TreePostType {
             'hierarchical'          => false,
             'public'                => true,
             'show_ui'               => true,
-            'show_in_menu'          => true,
+            'show_in_menu'          => false,
             'menu_position'         => 20,
             'menu_icon'             => 'dashicons-networking',
             'show_in_admin_bar'     => true,
@@ -230,7 +258,7 @@ class TreePostType {
             ],
         ];
         
-        register_post_type(self::POST_TYPE, $args);
+        \register_post_type(self::POST_TYPE, $args);
     }
 }
 

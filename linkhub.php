@@ -142,7 +142,51 @@ class Plugin {
         // Flush rewrite rules
         flush_rewrite_rules();
         
+        // Create default tree if none exists
+        $this->create_default_tree();
+        
         do_action('LH_activated');
+    }
+    
+    /**
+     * Create default tree on activation
+     */
+    private function create_default_tree() {
+        // Check if any tree exists
+        $existing = \get_posts([
+            'post_type'      => 'lh_tree',
+            'posts_per_page' => 1,
+            'post_status'    => ['publish', 'draft'],
+            'fields'         => 'ids',
+        ]);
+        
+        if (!empty($existing)) {
+            return; // Tree already exists
+        }
+        
+        // Create default tree
+        $tree_id = \wp_insert_post([
+            'post_type'   => 'lh_tree',
+            'post_title'  => __('My Link Tree', 'linkhub'),
+            'post_status' => 'draft',
+        ]);
+        
+        if (!is_wp_error($tree_id)) {
+            // Set default settings
+            \update_post_meta($tree_id, '_lh_tree_settings', [
+                'fonts' => [
+                    'heading' => '',
+                    'body'    => '',
+                ],
+                'colors' => [
+                    'bg'          => '#ffffff',
+                    'text'        => '#000000',
+                    'link_bg'     => '#000000',
+                    'link_text'   => '#ffffff',
+                    'social_icon' => '#000000',
+                ],
+            ]);
+        }
     }
     
     /**

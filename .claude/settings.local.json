@@ -1,4 +1,4 @@
-﻿{
+{
   "permissions": {
     "allow": [
       "Bash(ls -la \"e:\\\\ElyseVIPSTuff\\\\linkhub\\\\visual-builder\\\\src\\\\link-image\"\" && ls -la \"e:ElyseVIPSTufflinkhubvisual-buildersrclink-title\"\")",
@@ -16,7 +16,13 @@
       "Bash(git add:*)",
       "Bash(cmd /c \"robocopy E:\\\\ElyseVIPSTuff\\\\linkhub C:\\\\laragon\\\\www\\\\developer\\\\wp-content\\\\plugins\\\\linkhub /E /XF nul\")",
       "Bash(cmd /c \"xcopy E:\\\\ElyseVIPSTuff\\\\linkhub E:\\\\laragon\\\\www\\\\elysehofer\\\\wp-content\\\\plugins\\\\linkhub /E /Y /I\")",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -Command \"cd ''e:/ElyseVIPSTuff/linkhub''; ./build.ps1 -Version ''0.3.0''\")",
+      "Bash(powershell.exe:*)",
+      "Bash(ls:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nVersion 0.3.0: Add Tree Builder admin UI\n\nNew three-panel admin interface with modern drag-and-drop link management,\nlive preview, and organized settings navigation. Includes REST API endpoints\nfor CRUD operations, inline edit modals, and auto-save functionality.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(findstr:*)"
     ]
   }
 }

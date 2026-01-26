@@ -20,20 +20,30 @@ class TreeBuilderPage {
     public static function init() {
         add_action('admin_menu', [self::class, 'add_submenu_page']);
         add_action('admin_enqueue_scripts', [self::class, 'enqueue_assets']);
-        add_filter('post_row_actions', [self::class, 'add_row_action'], 10, 2);
     }
 
     /**
-     * Add submenu page under Link Trees
+     * Add LinkHub as main menu item
      */
     public static function add_submenu_page() {
-        add_submenu_page(
-            'edit.php?post_type=' . TreePostType::POST_TYPE,
-            __('Tree Builder', 'linkhub'),
-            __('Tree Builder', 'linkhub'),
+        // Add as top-level menu item
+        add_menu_page(
+            __('LinkHub', 'linkhub'),
+            __('LinkHub', 'linkhub'),
             'edit_posts',
             'lh-tree-builder',
-            [self::class, 'render_page']
+            [self::class, 'render_page'],
+            'dashicons-networking',
+            26
+        );
+
+        // Add submenu items
+        add_submenu_page(
+            'lh-tree-builder',
+            __('Settings', 'linkhub'),
+            __('Settings', 'linkhub'),
+            'edit_posts',
+            'lh-tree-builder'
         );
     }
 
@@ -41,8 +51,8 @@ class TreeBuilderPage {
      * Enqueue assets for the Tree Builder page
      */
     public static function enqueue_assets($hook) {
-        // Only load on our page
-        if ($hook !== 'lh_tree_page_lh-tree-builder') {
+        // Only load on our page (toplevel_page_lh-tree-builder)
+        if ($hook !== 'toplevel_page_lh-tree-builder') {
             return;
         }
 
@@ -72,7 +82,6 @@ class TreeBuilderPage {
         wp_localize_script('lh-tree-builder', 'lhTreeBuilder', [
             'apiBase'      => rest_url('linkhub/v1'),
             'nonce'        => wp_create_nonce('wp_rest'),
-            'treeId'       => isset($_GET['tree_id']) ? absint($_GET['tree_id']) : 0,
             'adminUrl'     => admin_url(),
             'editPostBase' => admin_url('post.php'),
             'strings'      => [
@@ -122,28 +131,62 @@ class TreeBuilderPage {
     }
 
     /**
-     * Add Tree Builder link to post row actions
-     */
-    public static function add_row_action($actions, $post) {
-        if ($post->post_type === TreePostType::POST_TYPE) {
-            $builder_url = admin_url('edit.php?post_type=' . TreePostType::POST_TYPE . '&page=lh-tree-builder&tree_id=' . $post->ID);
-            $actions['tree_builder'] = sprintf(
-                '<a href="%s">%s</a>',
-                esc_url($builder_url),
-                __('Tree Builder', 'linkhub')
-            );
-        }
-        return $actions;
-    }
-
-    /**
      * Render the Tree Builder page
      */
     public static function render_page() {
-        // Get tree_id from URL if provided
-        $tree_id = isset($_GET['tree_id']) ? absint($_GET['tree_id']) : 0;
+        // Get the tree (auto-create if none exists)
+        $tree_id = self::get_or_create_tree();
 
         // Include the template
         include LH_PLUGIN_DIR . 'includes/templates/admin/tree-builder-page.php';
+    }
+
+    /**
+     * Get existing tree or create one
+     *
+     * @return int Tree ID
+     */
+    private static function get_or_create_tree() {
+        // Check for existing tree
+        $trees = get_posts([
+            'post_type'      => TreePostType::POST_TYPE,
+            'posts_per_page' => 1,
+            'post_status'    => ['publish', 'draft'],
+            'orderby'        => 'ID',
+            'order'          => 'ASC',
+            'fields'         => 'ids',
+        ]);
+
+        if (!empty($trees)) {
+            return $trees[0];
+        }
+
+        // Create default tree
+        $tree_id = wp_insert_post([
+            'post_type'   => TreePostType::POST_TYPE,
+            'post_title'  => __('My Link Tree', 'linkhub'),
+            'post_status' => 'draft',
+        ]);
+
+        if (is_wp_error($tree_id)) {
+            return 0;
+        }
+
+        // Set default settings
+        update_post_meta($tree_id, TreePostType::META_SETTINGS, [
+            'background_color'      => '#8b8178',
+            'tree_background_color' => '#f5f5f5',
+            'title_color'           => '#1a1a1a',
+            'bio_color'             => '#555555',
+            'link_background_color' => '#eeeeee',
+            'link_text_color'       => '#000000',
+            'social_color'          => '#333333',
+            'hero_shape'            => 'round',
+            'social_style'          => 'circle',
+            'title_font'            => 'system',
+            'body_font'             => 'system',
+        ]);
+
+        return $tree_id;
     }
 }

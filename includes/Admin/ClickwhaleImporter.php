@@ -38,16 +38,17 @@ class ClickwhaleImporter {
      * Constructor
      */
     private function __construct() {
-        add_action('admin_menu', [$this, 'add_menu_page'], 20);
+        // Menu removed - functionality available in Tree Builder UI
+        // add_action('admin_menu', [$this, 'add_menu_page'], 20);
         add_action('admin_post_LH_import_clickwhale', [$this, 'handle_import']);
     }
     
     /**
-     * Add admin menu page
+     * Add admin menu page under LinkHub
      */
     public function add_menu_page() {
         add_submenu_page(
-            'edit.php?post_type=' . TreePostType::POST_TYPE,
+            'lh-tree-builder',
             __('Import from Clickwhale', 'linkhub'),
             __('Import', 'linkhub'),
             'manage_options',

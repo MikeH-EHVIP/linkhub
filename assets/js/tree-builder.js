@@ -11,7 +11,7 @@
         allLinks: [],
         isDirty: false,
         saveTimeout: null,
-        currentView: 'links',
+        currentView: 'profile',
 
         // DOM elements cache
         els: {},
@@ -25,9 +25,9 @@
             this.bindEvents();
             this.initColorPickers();
             this.populateFontSelects();
-            this.loadTreeList();
             this.loadAllLinks();
 
+            // Auto-load the tree (single tree mode)
             if (this.treeId) {
                 this.loadTree(this.treeId);
             }
@@ -39,30 +39,26 @@
         cacheElements() {
             this.els = {
                 builder: $('#lh-tree-builder'),
-                treeList: $('#lh-tree-list'),
                 emptyState: $('#lh-builder-empty'),
                 content: $('#lh-builder-content'),
                 linksContainer: $('#lh-links-container'),
                 previewFrame: $('#lh-preview-frame'),
                 treeTitle: $('#lh-tree-title'),
                 treeStatus: $('#lh-tree-status'),
-                saveStatus: $('#lh-save-status'),
                 viewBtn: $('#lh-view-tree-btn'),
                 classicEditorBtn: $('#lh-classic-editor-btn'),
                 addLinkBtn: $('#lh-add-link-btn'),
                 addHeadingBtn: $('#lh-add-heading-btn'),
                 addExistingBtn: $('#lh-add-existing-btn'),
-                newTreeBtn: $('#lh-new-tree-btn'),
                 refreshPreview: $('#lh-refresh-preview'),
-                settingsNav: $('#lh-tree-settings-nav'),
                 settingsNavList: $('.lh-settings-nav-list'),
                 socialLinksList: $('#lh-social-links-list'),
                 views: {
-                    links: $('#lh-view-links'),
                     profile: $('#lh-view-profile'),
                     social: $('#lh-view-social'),
+                    links: $('#lh-view-links'),
                     appearance: $('#lh-view-appearance'),
-                    display: $('#lh-view-display'),
+                    'import-export': $('#lh-view-import-export'),
                 },
             };
         },
@@ -71,16 +67,6 @@
          * Bind event listeners
          */
         bindEvents() {
-            // Tree list
-            this.els.treeList.on('click', 'button[data-tree-id]', (e) => {
-                e.preventDefault();
-                const id = $(e.currentTarget).data('tree-id');
-                this.loadTree(id);
-            });
-
-            // New tree button
-            this.els.newTreeBtn.on('click', () => this.openModal('create-tree'));
-
             // Add buttons
             this.els.addLinkBtn.on('click', () => this.openModal('create-link'));
             this.els.addHeadingBtn.on('click', () => this.openModal('add-heading'));
@@ -88,6 +74,30 @@
 
             // Refresh preview
             this.els.refreshPreview.on('click', () => this.refreshPreview());
+
+            // Import/Export buttons
+            $('#lh-export-btn').on('click', () => this.exportTree());
+            $('#lh-import-file').on('change', (e) => {
+                $('#lh-import-btn').prop('disabled', !e.target.files.length);
+            });
+            $('#lh-import-btn').on('click', () => this.importTree());
+            $('#lh-import-clickwhale-file').on('change', (e) => {
+                $('#lh-import-clickwhale-btn').prop('disabled', !e.target.files.length);
+            });
+            $('#lh-import-clickwhale-btn').on('click', () => this.importFromClickwhale());
+
+            // Reset/Delete all data
+            $('#lh-reset-confirm').on('input', (e) => {
+                const isValid = $(e.target).val().trim() === 'DELETE';
+                $('#lh-reset-all-btn').prop('disabled', !isValid);
+            });
+            $('#lh-reset-all-btn').on('click', () => this.resetAllData());
+
+            // Save button
+            $('#lh-save-btn').on('click', () => this.saveSettings());
+
+            // Publish button
+            $('#lh-publish-btn').on('click', () => this.togglePublish());
 
             // Title editing
             this.els.treeTitle.on('blur', () => this.onTitleChange());
@@ -132,11 +142,9 @@
             this.els.socialLinksList.on('click', '.lh-remove-social', (e) => {
                 $(e.currentTarget).closest('.lh-social-link-row').remove();
                 this.markDirty();
-                this.debounceSaveSettings();
             });
             this.els.socialLinksList.on('change', 'select, input', () => {
                 this.markDirty();
-                this.debounceSaveSettings();
             });
 
             // Image uploads
@@ -200,14 +208,14 @@
          */
         bindSettingsEvents() {
             // Text inputs
-            $('#lh-about-text').on('change', () => this.debounceSaveSettings());
+            $('#lh-about-text, #lh-tree-slug').on('change', () => this.markDirty());
 
             // Selects
             $('#lh-hero-shape, #lh-social-style, #lh-title-font, #lh-body-font, #lh-heading-size')
-                .on('change', () => this.debounceSaveSettings());
+                .on('change', () => this.markDirty());
 
             // Checkboxes
-            $('#lh-hero-fade, #lh-hide-header-footer').on('change', () => this.debounceSaveSettings());
+            $('#lh-hero-fade, #lh-hide-header-footer').on('change', () => this.markDirty());
         },
 
         /**
@@ -217,11 +225,9 @@
             $('.lh-color-picker').wpColorPicker({
                 change: () => {
                     this.markDirty();
-                    this.debounceSaveSettings();
                 },
                 clear: () => {
                     this.markDirty();
-                    this.debounceSaveSettings();
                 }
             });
         },
@@ -265,9 +271,6 @@
             // Add existing link submit
             $('#lh-add-existing-submit').on('click', () => this.addExistingLink());
 
-            // Create tree submit
-            $('#lh-create-tree-submit').on('click', () => this.createTree());
-
             // Enter key in modals
             $('.lh-modal input').on('keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -286,14 +289,14 @@
                 $('#lh-header-image-id').val(id);
                 $('#lh-header-image-preview').html(`<img src="${url}" alt="">`).addClass('has-image');
                 $('#lh-header-image-remove').show();
-                this.debounceSaveSettings();
+                this.markDirty();
             });
 
             $('#lh-header-image-remove').on('click', () => {
                 $('#lh-header-image-id').val('');
                 $('#lh-header-image-preview').html('').removeClass('has-image');
                 $('#lh-header-image-remove').hide();
-                this.debounceSaveSettings();
+                this.markDirty();
             });
 
             // Background image
@@ -301,14 +304,14 @@
                 $('#lh-bg-image-id').val(id);
                 $('#lh-bg-image-preview').html(`<img src="${url}" alt="">`).addClass('has-image');
                 $('#lh-bg-image-remove').show();
-                this.debounceSaveSettings();
+                this.markDirty();
             });
 
             $('#lh-bg-image-remove').on('click', () => {
                 $('#lh-bg-image-id').val('');
                 $('#lh-bg-image-preview').html('').removeClass('has-image');
                 $('#lh-bg-image-remove').hide();
-                this.debounceSaveSettings();
+                this.markDirty();
             });
 
             // New link image
@@ -380,39 +383,6 @@
         },
 
         /**
-         * Load tree list for sidebar
-         */
-        async loadTreeList() {
-            try {
-                const trees = await this.api('/trees');
-                this.renderTreeList(trees);
-            } catch (error) {
-                console.error('Failed to load trees:', error);
-                this.els.treeList.html(`<li class="lh-error">${lhTreeBuilder.strings.error}</li>`);
-            }
-        },
-
-        /**
-         * Render tree list in sidebar
-         */
-        renderTreeList(trees) {
-            if (!trees.length) {
-                this.els.treeList.html(`<li class="lh-empty">${lhTreeBuilder.strings.noTrees}</li>`);
-                return;
-            }
-
-            const html = trees.map(tree => `
-                <li class="${tree.id === this.treeId ? 'active' : ''}">
-                    <button type="button" data-tree-id="${tree.id}">
-                        ${this.escapeHtml(tree.title || '(Untitled)')}
-                    </button>
-                </li>
-            `).join('');
-
-            this.els.treeList.html(html);
-        },
-
-        /**
          * Load all links for the "Add Existing" dropdown
          */
         async loadAllLinks() {
@@ -434,16 +404,6 @@
                 this.tree = await this.api(`/trees/${id}`);
                 this.renderTree();
                 this.refreshPreview();
-
-                // Update URL without reload
-                const url = new URL(window.location);
-                url.searchParams.set('tree_id', id);
-                window.history.replaceState({}, '', url);
-
-                // Update sidebar active state
-                this.els.treeList.find('li').removeClass('active');
-                this.els.treeList.find(`button[data-tree-id="${id}"]`).closest('li').addClass('active');
-
             } catch (error) {
                 console.error('Failed to load tree:', error);
                 alert('Failed to load tree: ' + error.message);
@@ -467,14 +427,20 @@
             this.els.emptyState.hide();
             this.els.content.show();
 
-            // Show settings nav in sidebar
-            this.els.settingsNav.show();
-
             // Update header
             this.els.treeTitle.text(this.tree.title || '(Untitled)');
             this.els.treeStatus.text(this.tree.status).attr('class', `lh-status-badge ${this.tree.status}`);
             this.els.viewBtn.attr('href', this.tree.permalink);
             this.els.classicEditorBtn.attr('href', this.tree.edit_url);
+            $('#lh-tree-slug').val(this.tree.slug || '');
+
+            // Show/hide publish button based on status
+            const $publishBtn = $('#lh-publish-btn');
+            if (this.tree.status === 'publish') {
+                $publishBtn.hide();
+            } else {
+                $publishBtn.show();
+            }
 
             // Render link cards
             this.renderCards();
@@ -482,16 +448,15 @@
             // Populate settings
             this.populateSettings();
 
-            // Switch to links view
-            this.switchView('links');
+            // Switch to profile view (default)
+            this.switchView('profile');
 
             // Clear dirty state
             this.isDirty = false;
-            this.els.saveStatus.text('');
         },
 
         /**
-         * Switch between views (links, profile, social, appearance, display)
+         * Switch between views (profile, social, links, appearance, import-export)
          */
         switchView(viewName) {
             this.currentView = viewName;
@@ -690,7 +655,7 @@
          */
         markDirty() {
             this.isDirty = true;
-            this.els.saveStatus.text(lhTreeBuilder.strings.saving).attr('class', 'lh-save-status saving');
+            $('#lh-save-btn').prop('disabled', false);
         },
 
         /**
@@ -698,28 +663,14 @@
          */
         showSaved() {
             this.isDirty = false;
-            this.els.saveStatus.text(lhTreeBuilder.strings.saved).attr('class', 'lh-save-status saved');
-            setTimeout(() => {
-                if (!this.isDirty) {
-                    this.els.saveStatus.text('');
-                }
-            }, 2000);
+            $('#lh-save-btn').prop('disabled', true);
         },
 
         /**
          * Show error status
          */
         showError() {
-            this.els.saveStatus.text(lhTreeBuilder.strings.error).attr('class', 'lh-save-status error');
-        },
-
-        /**
-         * Debounce save settings
-         */
-        debounceSaveSettings() {
-            this.markDirty();
-            clearTimeout(this.saveTimeout);
-            this.saveTimeout = setTimeout(() => this.saveSettings(), 800);
+            // Error is shown via alert in the calling code
         },
 
         /**
@@ -729,11 +680,13 @@
             if (!this.treeId) return;
 
             const settings = this.collectSettings();
+            const title = this.els.treeTitle.text().trim();
+            const slug = $('#lh-tree-slug').val().trim();
 
             try {
                 await this.api(`/trees/${this.treeId}`, {
                     method: 'PUT',
-                    body: JSON.stringify({ settings })
+                    body: JSON.stringify({ settings, title, slug })
                 });
                 this.showSaved();
                 this.refreshPreview();
@@ -833,9 +786,34 @@
             const newTitle = this.els.treeTitle.text().trim();
             if (newTitle !== this.tree.title) {
                 this.tree.title = newTitle;
-                this.debounceSaveSettings();
-                // Update sidebar
-                this.els.treeList.find(`button[data-tree-id="${this.treeId}"]`).text(newTitle || '(Untitled)');
+                this.markDirty();
+            }
+        },
+
+        /**
+         * Publish the tree (no unpublish)
+         */
+        async togglePublish() {
+            if (!this.treeId || this.tree.status === 'publish') return;
+
+            const $publishBtn = $('#lh-publish-btn');
+
+            try {
+                await this.api(`/trees/${this.treeId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ status: 'publish' })
+                });
+
+                this.tree.status = 'publish';
+                this.els.treeStatus.text('publish').attr('class', 'lh-status-badge publish');
+
+                // Hide the publish button - once published, stays published
+                $publishBtn.hide();
+
+                this.showSaved();
+            } catch (error) {
+                console.error('Failed to publish:', error);
+                alert('Failed to publish: ' + error.message);
             }
         },
 
@@ -1146,28 +1124,130 @@
         },
 
         /**
-         * Create a new tree
+         * Export tree as JSON file
          */
-        async createTree() {
-            const title = $('#lh-new-tree-title').val().trim();
+        async exportTree() {
+            if (!this.treeId) return;
 
-            if (!title) {
-                alert('Please enter a tree name.');
+            try {
+                const data = await this.api(`/trees/${this.treeId}/export`);
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `linkhub-tree-${this.tree.title || 'export'}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('Export failed: ' + error.message);
+            }
+        },
+
+        /**
+         * Import tree from JSON file
+         */
+        async importTree() {
+            const fileInput = $('#lh-import-file')[0];
+            if (!fileInput.files.length) return;
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    await this.api(`/trees/${this.treeId}/import`, {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+                    alert('Import successful! Reloading...');
+                    this.loadTree(this.treeId);
+                } catch (error) {
+                    console.error('Import failed:', error);
+                    alert('Import failed: ' + error.message);
+                }
+            };
+
+            reader.readAsText(file);
+        },
+
+        /**
+         * Import from Clickwhale CSV
+         */
+        async importFromClickwhale() {
+            const fileInput = $('#lh-import-clickwhale-file')[0];
+            if (!fileInput.files.length) {
+                alert('Please select a CSV file first.');
+                return;
+            }
+
+            if (!confirm('This will import links from the Clickwhale CSV file. Continue?')) {
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('csv_file', file);
+            formData.append('tree_id', this.treeId);
+
+            try {
+                const response = await fetch(lhTreeBuilder.apiBase + '/import/clickwhale-csv', {
+                    method: 'POST',
+                    headers: {
+                        'X-WP-Nonce': lhTreeBuilder.nonce,
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || `Import failed: ${response.status}`);
+                }
+
+                const result = await response.json();
+                let message = `Imported ${result.count} links from Clickwhale CSV!`;
+                if (result.errors && result.errors.length) {
+                    message += `\n\nWarnings:\n${result.errors.join('\n')}`;
+                }
+                alert(message);
+                fileInput.value = '';
+                $('#lh-import-clickwhale-btn').prop('disabled', true);
+                this.loadTree(this.treeId);
+                this.loadAllLinks();
+            } catch (error) {
+                console.error('Clickwhale CSV import failed:', error);
+                alert('Import failed: ' + error.message);
+            }
+        },
+
+        /**
+         * Reset all data (delete all links and reset tree)
+         */
+        async resetAllData() {
+            if (!confirm('⚠️ WARNING: This will permanently delete ALL links and reset your LinkHub.\n\nThis action CANNOT be undone.\n\nAre you absolutely sure?')) {
+                return;
+            }
+
+            if (!confirm('FINAL WARNING: All your links, settings, and data will be lost forever.\n\nClick OK to proceed with deletion.')) {
                 return;
             }
 
             try {
-                const tree = await this.api('/trees', {
-                    method: 'POST',
-                    body: JSON.stringify({ title })
+                await this.api(`/trees/${this.treeId}/reset`, {
+                    method: 'DELETE'
                 });
-
-                this.closeModals();
-                this.loadTreeList();
-                this.loadTree(tree.id);
+                
+                alert('All data has been deleted. Your LinkHub has been reset.');
+                $('#lh-reset-confirm').val('');
+                $('#lh-reset-all-btn').prop('disabled', true);
+                this.loadTree(this.treeId);
+                this.loadAllLinks();
             } catch (error) {
-                console.error('Failed to create tree:', error);
-                alert('Failed to create tree: ' + error.message);
+                console.error('Reset failed:', error);
+                alert('Reset failed: ' + error.message);
             }
         },
 

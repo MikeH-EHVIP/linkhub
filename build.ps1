@@ -2,7 +2,7 @@
 # Creates a clean distribution-ready ZIP file
 
 param(
-    [string]$Version = "0.2.0",
+    [string]$Version = "0.3.0",
     [string]$OutputDir = "dist"
 )
 
@@ -97,13 +97,27 @@ Write-Host ""
 # Create ZIP file
 Write-Host "Creating ZIP archive..." -ForegroundColor Gray
 
-# Use .NET compression to avoid file locking issues
+# Use .NET compression with proper path handling for cross-platform compatibility
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 try {
-    [System.IO.Compression.ZipFile]::CreateFromDirectory($pluginTempDir, $zipPath, 'Optimal', $false)
+    # Create the archive manually to ensure forward slashes
+    $zip = [System.IO.Compression.ZipFile]::Open($zipPath, 'Create')
+    
+    $files = Get-ChildItem -Path $pluginTempDir -Recurse -File
+    foreach ($file in $files) {
+        $relativePath = $file.FullName.Substring($pluginTempDir.Length + 1)
+        # Convert backslashes to forward slashes for Linux compatibility
+        $entryName = $relativePath.Replace('\', '/')
+        $entryName = "$pluginName/$entryName"
+        
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $file.FullName, $entryName, 'Optimal') | Out-Null
+    }
+    
+    $zip.Dispose()
     Write-Host "Archive created successfully" -ForegroundColor Green
 } catch {
     Write-Host "Error creating archive: $_" -ForegroundColor Red
+    if ($zip) { $zip.Dispose() }
     # Clean up temp directory
     Remove-Item -Recurse -Force $tempDir
     exit 1
