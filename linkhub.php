@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: LinkHub
- * Plugin URI: https://github.com/elysevipatd/linkhub
+ * Plugin URI: https://github.com/MikeH-EHVIP/linkhub
  * Description: Create beautiful link-in-bio pages with CPT-based link management and click tracking
  * Version: 0.4.0
  * Author: ElyseVIP
@@ -88,7 +88,7 @@ class Plugin {
         if (file_exists($puc_file)) {
             require_once $puc_file;
             $updateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-                'https://github.com/elysevipatd/linkhub',
+                'https://github.com/MikeH-EHVIP/linkhub',
                 LH_PLUGIN_FILE,
                 'linkhub'
             );
