@@ -72,9 +72,33 @@ class Plugin {
         add_action('plugins_loaded', [$this, 'load_textdomain']);
         add_action('init', [$this, 'init'], 0);
         
+        // Initialize Update Checker
+        $this->init_update_checker();
+        
         // Activation/Deactivation hooks
         register_activation_hook(LH_PLUGIN_FILE, [$this, 'activate']);
         register_deactivation_hook(LH_PLUGIN_FILE, [$this, 'deactivate']);
+    }
+    
+    /**
+     * Initialize Plugin Update Checker
+     */
+    private function init_update_checker() {
+        $puc_file = LH_PLUGIN_DIR . 'vendor/yahnis-elsts/plugin-update-checker/load-v5p4.php';
+        if (file_exists($puc_file)) {
+            require_once $puc_file;
+            $updateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+                'https://github.com/elysevipatd/linkhub',
+                LH_PLUGIN_FILE,
+                'linkhub'
+            );
+            
+            // Set the branch that contains the stable release.
+            $updateChecker->setBranch('main');
+
+            // Optional: Enable release assets if you attach zips to GitHub releases
+            // $updateChecker->getVcsApi()->enableReleaseAssets();
+        }
     }
     
     /**
