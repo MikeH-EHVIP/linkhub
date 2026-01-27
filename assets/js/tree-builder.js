@@ -59,6 +59,7 @@
                     links: $('#lh-view-links'),
                     appearance: $('#lh-view-appearance'),
                     'import-export': $('#lh-view-import-export'),
+                    analytics: $('#lh-view-analytics'),
                 },
             };
         },
@@ -562,6 +563,11 @@
             // Update nav active state
             this.els.settingsNavList.find('li').removeClass('active');
             this.els.settingsNavList.find(`button[data-view="${viewName}"]`).closest('li').addClass('active');
+
+            // View specific loading
+            if (viewName === 'analytics') {
+                this.loadAnalytics();
+            }
         },
 
         /**
@@ -1438,6 +1444,391 @@
                 console.error('Reset failed:', error);
                 alert('Reset failed: ' + error.message);
             }
+        },
+
+        /**
+         * Load Analytics Data
+         */
+        async loadAnalytics(filterIds = []) {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded');
+                $('#lh-analytics-chart').parent().html('<p class="error">Error: Chart.js library could not be loaded.</p>');
+                return;
+            }
+
+            // Remove old dropdown wrapper if exists (cleanup from previous version)
+            // if ($('#lh-analytics-filter-dropdown').length) { ... } // Actually handled by ensuring ID uniqueness in html update
+
+            // Setup Modal Logic (Singleton-ish check)
+            const $modal = $('#lh-analytics-modal');
+            const $grid = $('#lh-analytics-link-grid');
+            const $compareBtn = $('#lh-analytics-compare-btn');
+            const MAX_SELECTED_LINKS = 10;
+
+            if (!$modal.data('initialized')) {
+                $modal.data('initialized', true);
+
+                // Open Modal
+                $compareBtn.on('click', async () => {
+                    $grid.html('<p>Loading links...</p>');
+                    $('#lh-modal-search').val(''); // Clear search
+                    $modal.fadeIn(200);
+
+                    try {
+                        // Gather currently loaded IDs (from last load)
+                        const currentIds = $modal.data('selectedIds') || [];
+
+                        // Load links
+                        const links = await this.api('/links');
+                        $grid.empty();
+                        
+                        if (links.length === 0) {
+                            $grid.html('<p>No links found.</p>');
+                            return;
+                        }
+
+                        // Group Links Logic
+                        const groups = { 'Uncategorized': [] };
+                        const processedLinkIds = new Set();
+                        const linkObjs = {}; 
+
+                        // Map link objects
+                        console.log('Analytics: Raw Links from API', links);
+                        links.forEach(l => {
+                            if (l && l.link_id) {
+                                linkObjs[parseInt(l.link_id)] = l;
+                            }
+                        });
+
+
+                        // Robust Grouping Strategy
+                        // 1. Try to use Tree Structure (Nested Collections OR Flat Headings)
+                        if (this.tree && this.tree.items && Array.isArray(this.tree.items)) {
+                            console.log('Analytics: Using Tree Structure', this.tree.items);
+                            
+                            // Check for nested collections
+                            const hasCollections = this.tree.items.some(i => i.type === 'collection');
+
+                            if (hasCollections) {
+                                // Recursive helper
+                                const groupLinksRecursive = (items, groupingName) => {
+                                    if (!items || !Array.isArray(items)) return;
+                                    
+                                    items.forEach(item => {
+                                        if (item.type === 'collection') {
+                                            const name = item.title || 'Untitled Collection';
+                                            if (!groups[name]) groups[name] = [];
+                                            groupLinksRecursive(item.children || [], name);
+                                        } else if (item.type === 'link' && item.link_id) {
+                                            const id = parseInt(item.link_id);
+                                            if (linkObjs[id] && !processedLinkIds.has(id)) {
+                                                if (!groups[groupingName]) groups[groupingName] = [];
+                                                groups[groupingName].push(linkObjs[id]);
+                                                processedLinkIds.add(id);
+                                            }
+                                        }
+                                    });
+                                };
+                                groupLinksRecursive(this.tree.items, 'Uncategorized');
+
+                            } else {
+                                // Linear Scan (Headings as separators)
+                                let currentGroup = 'Uncategorized';
+                                this.tree.items.forEach(item => {
+                                    if (item.type === 'heading') {
+                                        currentGroup = item.text || 'Untitled Section';
+                                        if (!groups[currentGroup]) groups[currentGroup] = [];
+                                    } else if (item.type === 'link' && item.link_id) {
+                                        const id = parseInt(item.link_id);
+                                        if (linkObjs[id] && !processedLinkIds.has(id)) {
+                                            if (!groups[currentGroup]) groups[currentGroup] = [];
+                                            groups[currentGroup].push(linkObjs[id]);
+                                            processedLinkIds.add(id);
+                                        }
+                                    }
+                                });
+                            }
+                        } else {
+                            console.warn('Analytics: No Tree Structure found, using flat list.');
+                        }
+
+                        // 2. Catch any links NOT in the tree (orphaned or just not placed)
+                        links.forEach(l => {
+                            if (!l.link_id) return;
+                            const id = parseInt(l.link_id);
+                            if (!processedLinkIds.has(id)) {
+                                groups['Uncategorized'].push(l);
+                            }
+                        });
+
+
+                        // Render Groups
+                        let hasRenderedGroup = false;
+                        Object.keys(groups).forEach(groupName => {
+                            const groupLinks = groups[groupName];
+                            if (groupLinks.length === 0) return;
+                            hasRenderedGroup = true;
+
+                            // Sort group items alphabetically
+                            groupLinks.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+
+                            // Safe ID for group header
+                            const safeGroupName = (groupName || 'group').replace(/[^a-z0-9]/gi, '-').toLowerCase() + '-' + Math.floor(Math.random() * 1000);
+
+                            $grid.append(`
+                                <div style="grid-column: 1 / -1; margin-top: 15px; margin-bottom: 5px; padding-top: 10px; padding-bottom: 5px; border-bottom: 2px solid #eee; display: flex; align-items: center; justify-content: space-between; background: #fff; position: sticky; top: 0; z-index: 5;">
+                                    <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        ${this.escapeHtml(groupName)} 
+                                        <span style="font-weight: 400; color: #999; font-size: 12px; margin-left: 5px;">(${groupLinks.length})</span>
+                                    </h4>
+                                    <button type="button" class="lh-btn lh-btn-small lh-select-group" data-group="${safeGroupName}" style="font-size: 11px; padding: 0 8px; height: 24px; min-height: 0; line-height: 24px;">Select All in Group</button>
+                                </div>
+                            `);
+
+                            groupLinks.forEach(link => {
+                                const isChecked = currentIds.includes(link.link_id.toString()) || currentIds.includes(link.link_id);
+                                const id = `lh-modal-link-${link.link_id}`;
+                                const thumb = link.image_url 
+                                    ? `<img src="${this.escapeAttr(link.image_url)}" style="width: 24px; height: 24px; border-radius: 4px; object-fit: cover;">` 
+                                    : `<span class="dashicons dashicons-admin-links" style="font-size: 20px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #eee; border-radius: 4px;"></span>`;
+
+                                $grid.append(`
+                                    <div class="lh-link-item group-${safeGroupName}" style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fff; display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="${id}" value="${link.link_id}" class="lh-modal-cb" ${isChecked ? 'checked' : ''}>
+                                        <label for="${id}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1; overflow: hidden;">
+                                            ${thumb}
+                                            <span class="lh-link-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${this.escapeHtml(link.title)}</span>
+                                        </label>
+                                    </div>
+                                `);
+                            });
+                        });
+                        
+                        if (!hasRenderedGroup) {
+                             $grid.html('<p>No links found within groups.</p>');
+                        }
+                        
+                        this.updateModalCount();
+                        
+                        // Bind Group Select Buttons
+                        $('.lh-select-group').off('click').on('click', (e) => {
+                            const groupClass = $(e.target).data('group');
+                            const $checkboxes = $(`.group-${groupClass} .lh-modal-cb`);
+                            const currentTotal = $('.lh-modal-cb:checked').length;
+                            const limit = MAX_SELECTED_LINKS;
+                            
+                            $checkboxes.each(function() {
+                                // If we haven't hit the limit and it's not checked
+                                if ($('.lh-modal-cb:checked').length < limit && !$(this).prop('checked')) {
+                                    $(this).prop('checked', true);
+                                }
+                            });
+                            
+                            this.updateModalCount();
+                        });
+
+                    } catch (e) {
+                         console.error(e);
+                         $grid.html('<p class="error">Failed to load links.</p>');
+                    }
+                });
+
+                // Close / Cancel
+                $('#lh-analytics-modal-close, #lh-analytics-modal-cancel').on('click', () => {
+                    $modal.fadeOut(200);
+                });
+
+                // Search Filter
+                $('#lh-modal-search').on('keyup', function() {
+                    const term = $(this).val().toLowerCase();
+                    $('.lh-link-item').each(function() {
+                        const title = $(this).find('.lh-link-title').text().toLowerCase();
+                        $(this).toggle(title.indexOf(term) > -1);
+                    });
+                });
+
+                // Clear Selection
+                $('#lh-modal-select-none').on('click', () => {
+                    $('.lh-modal-cb').prop('checked', false);
+                    this.updateModalCount();
+                });
+
+                // Live Count Update & Cap Enforcement
+                $grid.on('change', '.lh-modal-cb', () => {
+                    this.updateModalCount();
+                });
+
+                // Apply
+                $('#lh-analytics-modal-apply').on('click', () => {
+                    const selected = [];
+                    $('.lh-modal-cb:checked').each(function() {
+                        selected.push($(this).val());
+                    });
+                    
+                    // Save state
+                    $modal.data('selectedIds', selected);
+                    
+                    // Update Label on main screen
+                    const label = selected.length === 0 
+                        ? 'All Links' 
+                        : `${selected.length} Links Selected`;
+                    $('#lh-analytics-filter-label').text(label);
+
+                    // Load Data
+                    this.loadAnalytics(selected);
+                    $modal.fadeOut(200);
+                });
+            }
+
+            try {
+                let url = '/analytics/overview';
+                if (filterIds.length > 0) {
+                    url += '?link_ids=' + filterIds.join(',');
+                }
+
+                // If this is a refresh click (no filter args passed but button clicked), use stored filter
+                // But here filterIds is passed recursively. 
+                // Refresh button logic:
+                $('#lh-refresh-analytics').off('click').on('click', () => {
+                     const stored = $modal.data('selectedIds') || [];
+                     this.loadAnalytics(stored);
+                });
+
+                const data = await this.api(url);
+                
+                // Update stats
+                $('#lh-stat-total').text(data.total_clicks);
+                $('#lh-stat-month').text(data.last_30_days);
+                
+                // Update table
+                const $tbody = $('#lh-top-links-table tbody');
+                $tbody.empty();
+                
+                if (data.top_links.length === 0) {
+                    $tbody.append('<tr><td colspan="2">No clicks recorded yet.</td></tr>');
+                } else {
+                    data.top_links.forEach(link => {
+                        const thumb = link.image_url 
+                            ? `<img src="${this.escapeAttr(link.image_url)}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px; margin-right: 10px;">` 
+                            : '<div style="width: 32px; height: 32px; background: #f0f0f1; border-radius: 4px; margin-right: 10px; display: flex; align-items: center; justify-content: center;"><span class="dashicons dashicons-admin-links" style="font-size: 16px; width: 16px; height: 16px;"></span></div>';
+                        
+                        $tbody.append(`
+                            <tr>
+                                <td style="display: flex; align-items: center; padding: 12px;">
+                                    ${thumb}
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 15px;">${this.escapeHtml(link.title)}</div>
+                                    </div>
+                                </td>
+                                <td style="font-size: 15px; font-weight: 600;">${link.count}</td>
+                            </tr>
+                        `);
+                    });
+                }
+                
+                // Render Chart
+                this.renderAnalyticsChart(data.chart_data);
+                
+            } catch (error) {
+                console.error('Failed to load analytics:', error);
+                $('#lh-view-analytics').append(`<div class="notice notice-error"><p>Failed to load analytics data: ${error.message}</p></div>`);
+            }
+        },
+
+        updateModalCount() {
+            const count = $('.lh-modal-cb:checked').length;
+            const MAX_SELECTED_LINKS = 10;
+            
+            $('#lh-modal-selected-count').text(`${count} / ${MAX_SELECTED_LINKS} Selected`);
+            
+            if (count >= MAX_SELECTED_LINKS) {
+                $('.lh-modal-cb:not(:checked)').prop('disabled', true).parent().css('opacity', '0.5');
+            } else {
+                $('.lh-modal-cb').prop('disabled', false).parent().css('opacity', '1');
+            }
+        },
+
+        /**
+         * Render Analytics Chart
+         */
+        renderAnalyticsChart(chartData) {
+            const ctx = document.getElementById('lh-analytics-chart');
+            if (!ctx) return;
+            
+            // Destroy existing chart if any
+            if (this.analyticsChart) {
+                this.analyticsChart.destroy();
+            }
+            
+            // Determine datasets
+            let datasets = [];
+            
+            if (chartData.datasets) {
+                // New Format (Multiple Datasets)
+                const colors = [
+                    '#2271b1', '#d63638', '#00a32a', '#e6a400', '#9b51e0', 
+                    '#5ac8fa', '#f78da7', '#8e8e93', '#ffcc00', '#5856d6'
+                ];
+
+                datasets = chartData.datasets.map((ds, index) => {
+                    const color = colors[index % colors.length];
+                    return {
+                        label: ds.label,
+                        data: ds.data,
+                        borderColor: color,
+                        backgroundColor: color + '1A', // 10% opacity, hex alpha roughly
+                        borderWidth: 2,
+                        fill: chartData.datasets.length === 1, // Only fill if single line
+                        tension: 0.3
+                    };
+                });
+            } else {
+                // Legacy Fallback (One dataset)
+                datasets = [{
+                    label: 'Clicks',
+                    data: chartData.values,
+                    borderColor: '#2271b1',
+                    backgroundColor: 'rgba(34, 113, 177, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }];
+            }
+
+            this.analyticsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: datasets.length > 1
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
         },
 
         /**

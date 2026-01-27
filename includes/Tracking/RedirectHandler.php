@@ -154,12 +154,51 @@ class RedirectHandler {
         // Update database
         update_post_meta($link_id, LinkPostType::META_CLICK_COUNT, $new_count);
         update_post_meta($link_id, LinkPostType::META_LAST_CLICKED, current_time('mysql'));
+
+        // Log to analytics table
+        global $wpdb;
+        if (class_exists('LinkHub\Analytics\Database')) {
+            $table_name = \LinkHub\Analytics\Database::get_table_name();
+            
+            $ip = $this->get_client_ip();
+            $ip_hash = hash('sha256', $ip); // Anonymize
+            $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? substr($_SERVER['HTTP_USER_AGENT'], 0, 255) : '';
+            $referrer = isset($_SERVER['HTTP_REFERER']) ? substr($_SERVER['HTTP_REFERER'], 0, 255) : '';
+            
+            $wpdb->insert(
+                $table_name,
+                [
+                    'link_id' => $link_id,
+                    'tree_id' => 0, // Future improvement: Pass tree context
+                    'clicked_at' => current_time('mysql'),
+                    'ip_hash' => $ip_hash,
+                    'user_agent' => $user_agent,
+                    'referrer' => $referrer
+                ],
+                ['%d', '%d', '%s', '%s', '%s', '%s']
+            );
+        }
         
         // Update cache
         wp_cache_set($count_cache_key, $new_count, self::CACHE_GROUP, self::CACHE_EXPIRATION);
         
         // Fire action for extensibility
         do_action('LH_link_clicked', $link_id, $new_count);
+    }
+
+    /**
+     * Get client IP address
+     * 
+     * @return string
+     */
+    private function get_client_ip() {
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            return $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+        }
     }
     
     /**

@@ -3,7 +3,7 @@
  * Plugin Name: LinkHub
  * Plugin URI: https://github.com/MikeH-EHVIP/linkhub
  * Description: Create beautiful link-in-bio pages with CPT-based link management and click tracking
- * Version: 0.4.0
+ * Version: 0.4.12
  * Author: ElyseVIP
  * Author URI: https://elysevipatd.com
  * License: GPL-2.0+
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('LH_VERSION', '0.4.0');
+define('LH_VERSION', '0.4.12');
 define('LH_PLUGIN_FILE', __FILE__);
 define('LH_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('LH_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -131,6 +131,7 @@ class Plugin {
         
         // Initialize REST API (needed for Tree Builder)
         Admin\RestController::init();
+        Analytics\RestController::init();
 
         // Initialize admin components
         if (is_admin()) {
@@ -138,9 +139,22 @@ class Plugin {
             Admin\ClickwhaleImporter::instance();
             Admin\ExportImport::instance();
             Admin\TreeBuilderPage::init();
+            
+            // Check for DB updates
+            $this->check_db_updates();
         }
         
         do_action('LH_init');
+    }
+
+    /**
+     * Check if database needs update
+     */
+    private function check_db_updates() {
+        $db_version = get_option('lh_db_version');
+        if (version_compare($db_version, '1.0.0', '<')) {
+            Analytics\Database::create_table();
+        }
     }
     
     /**
@@ -159,6 +173,9 @@ class Plugin {
         // Register post types
         PostTypes\TreePostType::register();
         PostTypes\LinkPostType::register();
+        
+        // Create analytics table
+        Analytics\Database::create_table();
         
         // Add redirect rewrite rules
         Tracking\RedirectHandler::add_rewrite_rules();

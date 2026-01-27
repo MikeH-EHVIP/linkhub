@@ -1,6 +1,6 @@
 {
   "name": "@elysevipatd/linkhub",
-  "version": "0.4.0",
+  "version": "0.4.11",
   "description": "Create beautiful link-in-bio pages for WordPress with CPT-based link management and click tracking",
   "main": "dist/index.js",
   "scripts": {

@@ -43,6 +43,12 @@ if (!defined('ABSPATH')) {
                         </button>
                     </li>
                     <li>
+                        <button type="button" data-view="analytics">
+                            <span class="dashicons dashicons-chart-bar"></span>
+                            <?php esc_html_e('Analytics', 'linkhub'); ?>
+                        </button>
+                    </li>
+                    <li>
                         <button type="button" data-view="import-export">
                             <span class="dashicons dashicons-download"></span>
                             <?php esc_html_e('Import / Export', 'linkhub'); ?>
@@ -336,6 +342,62 @@ if (!defined('ABSPATH')) {
                         </div>
                     </div>
                 </div>
+
+                <!-- Analytics View -->
+                <div class="lh-view lh-view-analytics" id="lh-view-analytics" style="display: none;">
+                    <div class="lh-view-header">
+                        <h2><?php esc_html_e('Analytics', 'linkhub'); ?></h2>
+                        <p class="lh-view-description"><?php esc_html_e('Track your link tree performance.', 'linkhub'); ?></p>
+                    </div>
+                    <div class="lh-analytics-dashboard">
+                         <div class="lh-analytics-overview-cards" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                             <div class="lh-analytics-card" style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                 <h3 style="margin-top: 0; color: #666; font-size: 14px; text-transform: uppercase;"><?php esc_html_e('Total Clicks', 'linkhub'); ?></h3>
+                                 <div class="lh-stat-number" id="lh-stat-total" style="font-size: 36px; font-weight: bold; color: #333;">0</div>
+                             </div>
+                             <div class="lh-analytics-card" style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                 <h3 style="margin-top: 0; color: #666; font-size: 14px; text-transform: uppercase;"><?php esc_html_e('Last 30 Days', 'linkhub'); ?></h3>
+                                 <div class="lh-stat-number" id="lh-stat-month" style="font-size: 36px; font-weight: bold; color: #333;">0</div>
+                             </div>
+                         </div>
+                         
+                         <div class="lh-analytics-chart-container" style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 30px;">
+                            <div class="lh-analytics-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin: 0;"><?php esc_html_e('Performance Over Time', 'linkhub'); ?></h3>
+                                <div class="lh-analytics-controls" style="display: flex; gap: 10px; align-items: center;">
+                                    <span id="lh-analytics-filter-label" style="font-size: 13px; color: #666; font-weight: 500;">
+                                        <?php esc_html_e('All Links', 'linkhub'); ?>
+                                    </span>
+                                    <button type="button" class="lh-btn lh-btn-secondary" id="lh-analytics-compare-btn">
+                                        <span class="dashicons dashicons-filter"></span>
+                                        <?php esc_html_e('Compare Links', 'linkhub'); ?>
+                                    </button>
+                                    <button type="button" class="lh-btn lh-btn-small" id="lh-refresh-analytics" title="<?php esc_attr_e('Refresh Data', 'linkhub'); ?>">
+                                        <span class="dashicons dashicons-update"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="height: 300px;">
+                                <canvas id="lh-analytics-chart"></canvas>
+                            </div>
+                         </div>
+                         
+                         <div class="lh-analytics-top-links">
+                             <h3><?php esc_html_e('Top Performing Links', 'linkhub'); ?></h3>
+                             <table class="widefat striped" id="lh-top-links-table">
+                                 <thead>
+                                     <tr>
+                                         <th><?php esc_html_e('Link', 'linkhub'); ?></th>
+                                         <th><?php esc_html_e('Clicks', 'linkhub'); ?></th>
+                                     </tr>
+                                 </thead>
+                                 <tbody>
+                                 </tbody>
+                             </table>
+                         </div>
+                    </div>
+                </div>
+
             </div>
         </main>
 
@@ -525,6 +587,35 @@ if (!defined('ABSPATH')) {
         <div class="lh-modal-footer">
             <button type="button" class="lh-btn lh-btn-secondary lh-modal-cancel"><?php esc_html_e('Cancel', 'linkhub'); ?></button>
             <button type="button" class="lh-btn lh-btn-primary" id="lh-add-existing-submit"><?php esc_html_e('Add to Tree', 'linkhub'); ?></button>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Link Selector Modal -->
+<div id="lh-analytics-modal" class="lh-modal-overlay" style="display: none; z-index: 99999;">
+    <div class="lh-modal-content lh-modal-large" style="width: 800px; max-width: 90%; max-height: 80vh; display: flex; flex-direction: column;">
+        <div class="lh-modal-header">
+            <h3><?php esc_html_e('Select Links to Compare', 'linkhub'); ?></h3>
+            <button type="button" class="lh-modal-close" id="lh-analytics-modal-close">
+                <span class="dashicons dashicons-no-alt"></span>
+            </button>
+        </div>
+        <div class="lh-modal-body" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0;">
+            <div class="lh-modal-toolbar" style="padding: 15px 20px; border-bottom: 1px solid #eee; background: #fff; display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                <input type="text" id="lh-modal-search" placeholder="<?php esc_attr_e('Search links...', 'linkhub'); ?>" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
+                <div style="flex-grow: 1;"></div>
+                <button type="button" class="lh-btn lh-btn-small" id="lh-modal-select-none"><?php esc_html_e('Clear Selection', 'linkhub'); ?></button>
+                <span class="lh-modal-count" id="lh-modal-selected-count" style="min-width: 100px; text-align: right; color: #666; font-weight: 600;">0/10 Selected</span>
+            </div>
+            <div class="lh-modal-scroll-area" style="flex: 1; overflow-y: auto; padding: 20px;">
+                <div id="lh-analytics-link-grid" class="lh-link-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </div>
+        <div class="lh-modal-footer">
+            <button type="button" class="lh-btn lh-btn-secondary" id="lh-analytics-modal-cancel"><?php esc_html_e('Cancel', 'linkhub'); ?></button>
+            <button type="button" class="lh-btn lh-btn-primary" id="lh-analytics-modal-apply"><?php esc_html_e('Apply Comparison', 'linkhub'); ?></button>
         </div>
     </div>
 </div>

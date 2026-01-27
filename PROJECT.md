@@ -45,6 +45,9 @@ linkhub/
 │   │   ├── MetaBoxes.php        # Admin meta boxes for post types
 │   │   ├── ClickwhaleImporter.php  # CSV import from Clickwhale
 │   │   └── ExportImport.php     # Tree export/import functionality
+│   ├── Analytics/
+│   │   ├── Database.php         # Custom DB table management
+│   │   └── RestController.php   # Internal API for analytics data
 │   ├── Export/
 │   │   └── TreeExporter.php     # Export tree data to JSON
 │   ├── Modules/
@@ -57,7 +60,7 @@ linkhub/
 │   │   └── TreeRenderer.php     # Renders tree pages on frontend
 │   ├── Shortcodes/              # Shortcode handlers (if any)
 │   └── Tracking/
-│       └── RedirectHandler.php  # Click tracking via /go/ID/ URLs
+│   │   └── RedirectHandler.php  # Click tracking via /go/ID/ URLs (logs to wp_lh_analytics)
 ├── scripts/
 │   ├── build-plugin-zip.ps1     # PowerShell build script
 │   ├── build-plugin-zip.sh      # Bash build script

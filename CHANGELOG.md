@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.11] - 2026-01-27
+
+### Fixed
+- **Analytics Chart**: Fixed data formatting issue where the chart remained empty despite data being available. The API now correctly returns `labels` and `values` arrays instead of raw DB rows, matching the frontend expectation.
+
+## [0.4.10] - 2026-01-27
+
+### Fixed
+- **Analytics UI**: Fixed character encoding issue where symbols like dashes or quotes (from `get_the_title`) were being double-escaped (e.g., showing `&#8211;` instead of `–`).
+
+## [0.4.9] - 2026-01-27
+
+### Changed
+- **Analytics UI**: Removed URL from top links table and increased font size for better readability as requested.
+
+## [0.4.8] - 2026-01-27
+
+### Fixed
+- **Analytics UI**: Corrected "Top Performing Links" table to show the link Title (instead of just URL), actual click count (was undefined), and added image thumbnails.
+
+## [0.4.7] - 2026-01-27
+
+### Fixed
+- **CRITICAL**: Fixed API `update_tree_links` method to recursively save Collections. Previous versions (including 0.4.6) would strip Collections upon saving, leading to data loss in the structure. 0.4.6 only fixed the *reading* of nested data, this releases fixes the *writing*.
+
+## [0.4.6] - 2026-01-27
+
+### Fixed
+- **CRITICAL**: Fixed API bug where Collections were being stripped from the builder data, causing them to disappear on save.
+- **API**: Added recursive processing to `get_tree` endpoint to correctly handle nested collection structures.
+
+## [0.4.5] - 2026-01-27
+
+### Added
+- **Analytics Dashboard**: New tab in admin panel with Chart.js visualization of click performance.
+- **Click Tracking**: High-performance logging to custom database table (`wp_lh_analytics`).
+- **Privacy**: IP addresses are now hashed (SHA-256) before storage for privacy compliance.
+- **Reporting**: "Top Links" table to see best performing content at a glance.
+
 ## [0.4.0] - 2026-01-26
 
 ### Added

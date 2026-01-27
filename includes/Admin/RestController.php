@@ -319,8 +319,20 @@ class RestController extends WP_REST_Controller {
             return new WP_Error('invalid_items', __('Items must be an array', 'linkhub'), ['status' => 400]);
         }
 
-        // Sanitize items
+        // Sanitize items recursively
+        $sanitized = $this->sanitize_items_recursive($items);
+
+        update_post_meta($tree_id, TreePostType::META_TREE_LINKS, $sanitized);
+
+        return new WP_REST_Response(['success' => true, 'items' => $sanitized]);
+    }
+
+    /**
+     * Recursively sanitize tree items (links, headings, collections)
+     */
+    private function sanitize_items_recursive($items) {
         $sanitized = [];
+
         foreach ($items as $item) {
             if (!is_array($item) || !isset($item['type'])) {
                 continue;
@@ -340,12 +352,35 @@ class RestController extends WP_REST_Controller {
                     'text' => isset($item['text']) ? sanitize_text_field($item['text']) : '',
                     'size' => $size,
                 ];
+            } elseif ($item['type'] === 'collection') {
+                $children = isset($item['children']) && is_array($item['children']) 
+                    ? $this->sanitize_items_recursive($item['children']) 
+                    : [];
+                
+                $settings = isset($item['settings']) && is_array($item['settings']) 
+                    ? $item['settings'] 
+                    : [];
+
+                // Sanitize specific settings if needed
+                $clean_settings = [
+                    'borderEnabled' => !empty($settings['borderEnabled']),
+                    'borderColor'   => isset($settings['borderColor']) ? sanitize_hex_color($settings['borderColor']) : '',
+                    'borderWidth'   => isset($settings['borderWidth']) ? sanitize_text_field($settings['borderWidth']) : '',
+                    'headerBgColor' => isset($settings['headerBgColor']) ? sanitize_text_field($settings['headerBgColor']) : '', // Allow rgba or transparent
+                ];
+
+                $sanitized[] = [
+                    'type'       => 'collection',
+                    'id'         => isset($item['id']) ? sanitize_text_field($item['id']) : uniqid('col_'),
+                    'title'      => isset($item['title']) ? sanitize_text_field($item['title']) : __('Collection', 'linkhub'),
+                    'settings'   => $clean_settings,
+                    'isExpanded' => isset($item['isExpanded']) ? (bool) $item['isExpanded'] : true,
+                    'children'   => $children
+                ];
             }
         }
 
-        update_post_meta($tree_id, TreePostType::META_TREE_LINKS, $sanitized);
-
-        return new WP_REST_Response(['success' => true, 'items' => $sanitized]);
+        return $sanitized;
     }
 
     /**
@@ -506,29 +541,7 @@ class RestController extends WP_REST_Controller {
     private function prepare_tree_response($post) {
         $tree_links = get_post_meta($post->ID, TreePostType::META_TREE_LINKS, true) ?: [];
 
-        $items = [];
-        foreach ($tree_links as $item) {
-            if (is_array($item) && isset($item['type'])) {
-                if ($item['type'] === 'heading') {
-                    $items[] = [
-                        'type' => 'heading',
-                        'text' => $item['text'] ?? '',
-                        'size' => $item['size'] ?? 'medium',
-                    ];
-                } elseif ($item['type'] === 'link' && isset($item['link_id'])) {
-                    $link = get_post($item['link_id']);
-                    if ($link && $link->post_type === LinkPostType::POST_TYPE) {
-                        $items[] = $this->prepare_link_item($link);
-                    }
-                }
-            } elseif (is_numeric($item)) {
-                // Legacy format: just link ID
-                $link = get_post($item);
-                if ($link && $link->post_type === LinkPostType::POST_TYPE) {
-                    $items[] = $this->prepare_link_item($link);
-                }
-            }
-        }
+        $items = $this->prepare_items_recursive($tree_links);
 
         return new WP_REST_Response([
             'id'          => $post->ID,
@@ -541,6 +554,48 @@ class RestController extends WP_REST_Controller {
             'settings'    => $this->get_tree_settings($post->ID),
             'items'       => $items,
         ]);
+    }
+
+    /**
+     * Recursively prepare items for API response
+     */
+    private function prepare_items_recursive($items) {
+        $prepared = [];
+        
+        foreach ($items as $item) {
+            if (is_array($item) && isset($item['type'])) {
+                if ($item['type'] === 'heading') {
+                    $prepared[] = [
+                        'type' => 'heading',
+                        'text' => $item['text'] ?? '',
+                        'size' => $item['size'] ?? 'medium',
+                    ];
+                } elseif ($item['type'] === 'collection') {
+                    $children = isset($item['children']) ? $item['children'] : [];
+                    $prepared[] = [
+                        'type' => 'collection',
+                        'id' => $item['id'] ?? uniqid('col_'),
+                        'title' => $item['title'] ?? '',
+                        'settings' => $item['settings'] ?? [],
+                        'children' => $this->prepare_items_recursive($children),
+                        'isExpanded' => isset($item['isExpanded']) ? $item['isExpanded'] : true
+                    ];
+                } elseif ($item['type'] === 'link' && isset($item['link_id'])) {
+                    $link = get_post($item['link_id']);
+                    if ($link && $link->post_type === LinkPostType::POST_TYPE) {
+                        $prepared[] = $this->prepare_link_item($link);
+                    }
+                }
+            } elseif (is_numeric($item)) {
+                // Legacy format: just link ID
+                $link = get_post($item);
+                if ($link && $link->post_type === LinkPostType::POST_TYPE) {
+                    $prepared[] = $this->prepare_link_item($link);
+                }
+            }
+        }
+        
+        return $prepared;
     }
 
     /**
