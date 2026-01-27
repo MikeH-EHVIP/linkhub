@@ -120,44 +120,9 @@ class TreeRenderer {
 
         // Render links section
         $output .= '<div class="lh-tree-links">';
-
-        foreach ($tree_links as $tree_link) {
-            // Check if it's a heading
-            if (is_array($tree_link) && isset($tree_link['type']) && $tree_link['type'] === 'heading') {
-                $heading_text = isset($tree_link['text']) ? $tree_link['text'] : '';
-                $heading_size = isset($tree_link['size']) ? $tree_link['size'] : 'medium';
-                
-                $size_classes = [
-                    'small' => 'lh-heading-small',
-                    'medium' => 'lh-heading-medium',
-                    'large' => 'lh-heading-large'
-                ];
-                $size_class = isset($size_classes[$heading_size]) ? $size_classes[$heading_size] : $size_classes['medium'];
-                
-                $output .= sprintf(
-                    '<div class="lh-heading %s">%s</div>',
-                    esc_attr($size_class),
-                    esc_html($heading_text)
-                );
-                continue;
-            }
-            
-            // Handle links - both old format (just ID) and new format (array with link_id)
-            if (is_array($tree_link)) {
-                $link_id = $tree_link['link_id'] ?? 0;
-                $design_override = $tree_link['design_id'] ?? 0;
-            } else {
-                $link_id = $tree_link;
-                $design_override = 0;
-            }
-
-            if (!$link_id) {
-                continue;
-            }
-
-            // Render this link using the LinkTypeRenderer
-            $output .= LinkTypeRenderer::render($link_id, $design_override, $heading_size);
-        }
+        
+        // Use recursive renderer
+        $output .= self::render_items($tree_links);
 
         $output .= '</div>'; // Close lh-tree-links
         $output .= '</div>'; // Close lh-tree
@@ -404,6 +369,93 @@ class TreeRenderer {
         $output .= '</div>';
 
         return $output;
+    }
+
+    /**
+     * Render a list of items (recursive)
+     */
+    private static function render_items($items) {
+        $output = '';
+        foreach ($items as $item) {
+             // Collection
+             if (is_array($item) && isset($item['type']) && $item['type'] === 'collection') {
+                 $output .= self::render_collection($item);
+                 continue;
+             }
+             
+             // Heading (Legacy support)
+             if (is_array($item) && isset($item['type']) && $item['type'] === 'heading') {
+                $heading_text = isset($item['text']) ? $item['text'] : '';
+                $heading_size = isset($item['size']) ? $item['size'] : 'medium';
+                
+                $size_classes = [
+                    'small' => 'lh-heading-small',
+                    'medium' => 'lh-heading-medium',
+                    'large' => 'lh-heading-large'
+                ];
+                $size_class = isset($size_classes[$heading_size]) ? $size_classes[$heading_size] : $size_classes['medium'];
+                
+                $output .= sprintf(
+                    '<div class="lh-heading %s">%s</div>',
+                    esc_attr($size_class),
+                    esc_html($heading_text)
+                );
+                continue;
+             }
+             
+             // Link
+             if (is_array($item)) {
+                $link_id = $item['link_id'] ?? 0;
+                $design_override = $item['design_id'] ?? 0;
+            } else {
+                $link_id = $item;
+                $design_override = 0;
+            }
+            
+            if ($link_id) {
+                // Pass heading size context if needed, or default
+                $output .= LinkTypeRenderer::render($link_id, $design_override);
+            }
+        }
+        return $output;
+    }
+
+    /**
+     * Render a collection
+     */
+    private static function render_collection($item) {
+        $title = $item['title'] ?? '';
+        $children = $item['children'] ?? [];
+        $settings = $item['settings'] ?? [];
+        
+        // Styles
+        $style = '';
+        $classes = ['lh-collection'];
+
+        if (!empty($settings['borderEnabled'])) {
+             $classes[] = 'lh-collection-has-border';
+             $color = $settings['borderColor'] ?? '#000';
+             $width = ($settings['borderWidth'] ?? '2px'); 
+             $style .= "border: {$width} solid {$color};";
+        }
+
+        // Output
+        $html = '<div class="' . esc_attr(implode(' ', $classes)) . '" style="' . esc_attr($style) . '">';
+        if ($title) {
+            $header_style = '';
+            if (!empty($settings['headerBgColor'])) {
+                $header_style = 'background-color:' . esc_attr($settings['headerBgColor']);
+            }
+            $html .= '<div class="lh-collection-title" style="' . esc_attr($header_style) . '">' . esc_html($title) . '<span class="lh-collection-toggle dashicons dashicons-arrow-down-alt2"></span></div>';
+        }
+        $html .= '<div class="lh-collection-items">';
+        if (!empty($children)) {
+            $html .= self::render_items($children);
+        }
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        return $html;
     }
 }
 

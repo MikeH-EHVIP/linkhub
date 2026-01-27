@@ -99,18 +99,52 @@
             // Publish button
             $('#lh-publish-btn').on('click', () => this.togglePublish());
 
-            // Title editing
-            this.els.treeTitle.on('blur', () => this.onTitleChange());
-            this.els.treeTitle.on('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.els.treeTitle.blur();
-                }
+            // Title editing (Profile View)
+            $('#lh-profile-title').on('input', (e) => {
+                const val = $(e.target).val();
+                this.els.treeTitle.text(val || '(Untitled)');
+                this.markDirty();
+            });
+
+            // Update iframe preview title in real-time if postMessage supported (or simple DOM access if same origin)
+            $('#lh-profile-title').on('input', (e) => {
+                 try {
+                     const val = $(e.target).val();
+                     const iframe = document.getElementById('lh-preview-frame');
+                     if (iframe && iframe.contentWindow) {
+                         // Attempt direct DOM manipulation (same origin)
+                         const titleEl = iframe.contentWindow.document.querySelector('.lh-tree-title');
+                         if (titleEl) {
+                             titleEl.innerText = val;
+                         }
+                     }
+                 } catch (err) {
+                     // Cross-origin restriction or element not found
+                 }
             });
 
             // Links container events (delegated)
             this.els.linksContainer
                 .on('click', '.lh-edit-btn', (e) => this.onEditLink(e))
+                .on('click', '.lh-toggle-collection-btn', (e) => {
+                     const $card = $(e.currentTarget).closest('.lh-collection-card');
+                     $card.find('.lh-collection-content').toggleClass('collapsed');
+                     $card.find('.lh-toggle-collection-btn span').toggleClass('dashicons-arrow-down-alt2 dashicons-arrow-right-alt2');
+                     // State updated via saveLinksOrder() eventually or findItemById
+                })
+                .on('click', '.lh-remove-collection-btn', (e) => {
+                    if(!confirm('Delete collection and all links inside?')) return;
+                    $(e.currentTarget).closest('.lh-collection-card').remove();
+                    this.saveLinksOrder(); // Syncs DOM removal to tree.items
+                })
+                .on('change', '.lh-collection-title-input', (e) => {
+                     this.saveLinksOrder(); // Syncs title change
+                })
+                .on('click', '.lh-collection-settings-btn', (e) => {
+                    // Placeholder for future UI
+                    alert('Collection styling coming in next update.');
+                })
+                .on('click', '.lh-edit-heading-btn', (e) => this.onEditHeading(e))
                 .on('click', '.lh-edit-heading-btn', (e) => this.onEditHeading(e))
                 .on('click', '.lh-remove-btn', (e) => this.onRemoveItem(e))
                 .on('blur', '.lh-card-title[contenteditable]', (e) => this.onCardTitleChange(e))
@@ -152,54 +186,41 @@
         },
 
         /**
-         * Initialize drag and drop
+         * Initialize drag and drop (SortableJS)
          */
         initDragDrop() {
-            let draggedItem = null;
+           // Cleanup old instances
+            if (this.sortables) {
+                this.sortables.forEach(s => s.destroy());
+            }
+            this.sortables = [];
 
-            this.els.linksContainer.on('dragstart', '.lh-link-card', (e) => {
-                draggedItem = e.currentTarget;
-                $(draggedItem).addClass('dragging');
-                e.originalEvent.dataTransfer.effectAllowed = 'move';
-            });
-
-            this.els.linksContainer.on('dragend', '.lh-link-card', (e) => {
-                $(e.currentTarget).removeClass('dragging');
-                $('.lh-link-card').removeClass('drag-over');
-                draggedItem = null;
-            });
-
-            this.els.linksContainer.on('dragover', '.lh-link-card', (e) => {
-                e.preventDefault();
-                e.originalEvent.dataTransfer.dropEffect = 'move';
-                const target = $(e.currentTarget);
-                if (!target.is(draggedItem)) {
-                    target.addClass('drag-over');
-                }
-            });
-
-            this.els.linksContainer.on('dragleave', '.lh-link-card', (e) => {
-                $(e.currentTarget).removeClass('drag-over');
-            });
-
-            this.els.linksContainer.on('drop', '.lh-link-card', (e) => {
-                e.preventDefault();
-                const target = $(e.currentTarget);
-                target.removeClass('drag-over');
-
-                if (draggedItem && !target.is(draggedItem)) {
-                    const $dragged = $(draggedItem);
-                    const targetIndex = target.index();
-                    const draggedIndex = $dragged.index();
-
-                    if (draggedIndex < targetIndex) {
-                        target.after($dragged);
-                    } else {
-                        target.before($dragged);
-                    }
-
+            const options = {
+                group: 'nested-tree',
+                animation: 150,
+                handle: '.lh-drag-handle',
+                fallbackOnBody: true,
+                swapThreshold: 0.65,
+                ghostClass: 'lh-sortable-ghost',
+                chosenClass: 'lh-sortable-chosen',
+                onEnd: () => {
                     this.saveLinksOrder();
                 }
+            };
+
+            // Init on root
+            // Ensure global Sortable is available (enqueued via script)
+            if (typeof Sortable === 'undefined') {
+                console.error('SortableJS not loaded');
+                return;
+            }
+
+            const root = new Sortable(this.els.linksContainer[0], options);
+            this.sortables.push(root);
+
+            // Init on all collection children containers
+            this.els.linksContainer.find('.lh-collection-children').each((i, el) => {
+                 this.sortables.push(new Sortable(el, options));
             });
         },
 
@@ -402,12 +423,58 @@
 
             try {
                 this.tree = await this.api(`/trees/${id}`);
+                
+                // Auto-migrate if flat structure detected
+                if (this.tree.items && this.tree.items.some(i => i.type === 'heading')) {
+                    console.log('Migrating flat headings to collections...');
+                    this.tree.items = this.migrateLinksToCollections(this.tree.items);
+                    this.markDirty();
+                }
+
                 this.renderTree();
                 this.refreshPreview();
             } catch (error) {
                 console.error('Failed to load tree:', error);
                 alert('Failed to load tree: ' + error.message);
             }
+        },
+
+        /**
+         * Migrate flat headings to nested collections
+         */
+        migrateLinksToCollections(flatItems) {
+            const nested = [];
+            let currentCollection = null;
+
+            flatItems.forEach(item => {
+                if (item.type === 'heading') {
+                    // Start new collection
+                    currentCollection = {
+                        type: 'collection',
+                        id: 'col_' + Date.now() + Math.floor(Math.random() * 1000),
+                        title: item.text,
+                        settings: {
+                            borderEnabled: true,
+                            borderColor: '#000000',
+                            borderWidth: '2px',
+                            headingSize: item.size || 'medium'
+                        },
+                        children: [],
+                        isExpanded: true
+                    };
+                    nested.push(currentCollection);
+                } else {
+                    // It's a link
+                    if (currentCollection) {
+                        currentCollection.children.push(item);
+                    } else {
+                        // Orphan link (before any heading) -> Top level
+                        nested.push(item);
+                    }
+                }
+            });
+
+            return nested;
         },
 
         /**
@@ -427,32 +494,55 @@
             this.els.emptyState.hide();
             this.els.content.show();
 
-            // Update header
+            // Update header info
             this.els.treeTitle.text(this.tree.title || '(Untitled)');
             this.els.treeStatus.text(this.tree.status).attr('class', `lh-status-badge ${this.tree.status}`);
             this.els.viewBtn.attr('href', this.tree.permalink);
             this.els.classicEditorBtn.attr('href', this.tree.edit_url);
             $('#lh-tree-slug').val(this.tree.slug || '');
 
-            // Show/hide publish button based on status
-            const $publishBtn = $('#lh-publish-btn');
-            if (this.tree.status === 'publish') {
-                $publishBtn.hide();
-            } else {
-                $publishBtn.show();
-            }
+            // Update Add Heading button to "Add Collection"
+            this.els.addHeadingBtn.html('<span class="dashicons dashicons-editor-textcolor"></span> Add Collection');
 
-            // Render link cards
-            this.renderCards();
+            // Render items
+            if (!this.tree.items || !this.tree.items.length) {
+                this.els.linksContainer.html('<p class="lh-empty-links">No links yet. Add your first link above.</p>');
+            } else {
+                 this.els.linksContainer.empty();
+                 this.renderItems(this.tree.items, this.els.linksContainer);
+                 this.initDragDrop();
+            }
 
             // Populate settings
             this.populateSettings();
 
-            // Switch to profile view (default)
-            this.switchView('profile');
+            // Refresh Publish Button state
+            this.updatePublishButton();
 
+            // Switch to profile view by default if no view selected
+            // But if we are reloading (e.g. after save), keep current view
+            if (!this.currentView) {
+                this.switchView('links'); // Default to Links view as it is the main feature
+            } else {
+                this.switchView(this.currentView);
+            }
+            
             // Clear dirty state
             this.isDirty = false;
+        },
+
+        /**
+         * Update Publish/Update button visibility/text
+         */
+        updatePublishButton() {
+             const $publishBtn = $('#lh-publish-btn');
+             // If tree is published, we might want to hide 'Publish' or change to 'Update'
+             // Original logic was: hide if published (assuming auto-save or 'Save Changes' handles updates)
+             if (this.tree && this.tree.status === 'publish') {
+                 $publishBtn.hide();
+             } else {
+                 $publishBtn.show();
+             }
         },
 
         /**
@@ -475,50 +565,34 @@
         },
 
         /**
-         * Render link/heading cards
+         * Render items recursively
          */
-        renderCards() {
-            if (!this.tree.items || !this.tree.items.length) {
-                this.els.linksContainer.html('<p class="lh-empty-links">No links yet. Add your first link above.</p>');
-                return;
-            }
-
-            const html = this.tree.items.map((item, index) => this.createCardHtml(item, index)).join('');
-            this.els.linksContainer.html(html);
+        renderItems(items, container) {
+            items.forEach((item, index) => {
+                if (item.type === 'collection') {
+                    container.append(this.createCollectionHtml(item));
+                    
+                    // Render children
+                    const childrenContainer = container.find(`[data-id="${item.id}"] .lh-collection-children`);
+                    if (item.children && item.children.length) {
+                        this.renderItems(item.children, childrenContainer);
+                    }
+                } else if (!item.type || item.type === 'link') {
+                    container.append(this.createLinkHtml(item));
+                }
+            });
         },
 
         /**
-         * Create HTML for a card
+         * Create HTML for a Link Card
          */
-        createCardHtml(item, index) {
-            if (item.type === 'heading') {
-                return `
-                    <div class="lh-link-card lh-heading-card" draggable="true" data-index="${index}" data-type="heading" data-text="${this.escapeAttr(item.text)}" data-size="${item.size || 'medium'}">
-                        <span class="lh-drag-handle dashicons dashicons-menu"></span>
-                        <span class="dashicons dashicons-editor-textcolor lh-heading-icon"></span>
-                        <div class="lh-card-info">
-                            <div class="lh-card-title" contenteditable="true" spellcheck="false">${this.escapeHtml(item.text)}</div>
-                            <div class="lh-card-meta">Size: ${item.size || 'medium'}</div>
-                        </div>
-                        <div class="lh-card-actions">
-                            <button type="button" class="lh-edit-heading-btn" title="Edit">
-                                <span class="dashicons dashicons-edit"></span>
-                            </button>
-                            <button type="button" class="lh-remove-btn" title="Remove">
-                                <span class="dashicons dashicons-no-alt"></span>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Link card
+        createLinkHtml(item) {
             const thumbHtml = item.image_url
                 ? `<img src="${this.escapeAttr(item.image_url)}" alt="">`
                 : '<span class="dashicons dashicons-admin-links"></span>';
 
             return `
-                <div class="lh-link-card" draggable="true" data-index="${index}" data-type="link" data-link-id="${item.link_id}">
+                <div class="lh-link-card" data-type="link" data-link-id="${item.link_id}">
                     <span class="lh-drag-handle dashicons dashicons-menu"></span>
                     <div class="lh-card-thumb">${thumbHtml}</div>
                     <div class="lh-card-info">
@@ -542,10 +616,53 @@
         },
 
         /**
+         * Create HTML for a Collection
+         */
+        createCollectionHtml(item) {
+             const settings = item.settings || {};
+             const borderStyle = settings.borderEnabled ? `border: ${settings.borderWidth || '2px'} solid ${settings.borderColor || '#000'};` : '';
+             const headerStyle = settings.headerBgColor ? `background-color: ${settings.headerBgColor};` : '';
+
+             return `
+                <div class="lh-collection-card" data-type="collection" data-id="${item.id}">
+                    <div class="lh-collection-header" style="${borderStyle} ${headerStyle}">
+                        <span class="lh-drag-handle dashicons dashicons-menu"></span>
+                        <div class="lh-collection-info">
+                            <input type="text" class="lh-collection-title-input" value="${this.escapeAttr(item.title)}" placeholder="Collection Title">
+                            <span class="lh-collection-count">${(item.children || []).length} links</span>
+                        </div>
+                        <div class="lh-collection-actions">
+                            <button type="button" class="lh-collection-settings-btn" title="Collection Settings">
+                                <span class="dashicons dashicons-art"></span>
+                            </button>
+                            <button type="button" class="lh-remove-collection-btn" title="Remove Collection">
+                                <span class="dashicons dashicons-trash"></span>
+                            </button>
+                            <button type="button" class="lh-toggle-collection-btn">
+                                <span class="dashicons dashicons-arrow-down-alt2"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lh-collection-content ${item.isExpanded ? '' : 'collapsed'}">
+                        <div class="lh-collection-children-wrapper">
+                            <div class="lh-collection-children"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+    
+        // Deprecated alias for compatibility if needed internally
+        renderCards() { this.renderTree(); },
+
+        /**
          * Populate settings panel with tree data
          */
         populateSettings() {
             const s = this.tree.settings;
+
+            // Title
+            $('#lh-profile-title').val(this.tree.title || '');
 
             // Header image
             if (s.header_image_url) {
@@ -680,10 +797,14 @@
             if (!this.treeId) return;
 
             const settings = this.collectSettings();
-            const title = this.els.treeTitle.text().trim();
+            const title = $('#lh-profile-title').val().trim();
             const slug = $('#lh-tree-slug').val().trim();
 
             try {
+                // Update local model
+                this.tree.title = title;
+                this.els.treeTitle.text(title || '(Untitled)');
+
                 await this.api(`/trees/${this.treeId}`, {
                     method: 'PUT',
                     body: JSON.stringify({ settings, title, slug })
@@ -741,42 +862,78 @@
         /**
          * Save links order
          */
+        /**
+         * Save links order (Recursive)
+         */
         async saveLinksOrder() {
             if (!this.treeId) return;
 
             this.markDirty();
 
-            const items = [];
-            this.els.linksContainer.find('.lh-link-card').each(function() {
-                const $card = $(this);
-                const type = $card.data('type');
+            // Helper to recursively serialize DOM to JSON
+            const serialize = (container) => {
+                const items = [];
+                container.children().each((i, el) => {
+                    const $el = $(el);
+                    const type = $el.data('type');
 
-                if (type === 'link') {
-                    items.push({
-                        type: 'link',
-                        link_id: parseInt($card.data('link-id'))
-                    });
-                } else if (type === 'heading') {
-                    items.push({
-                        type: 'heading',
-                        text: $card.find('.lh-card-title').text().trim(),
-                        size: $card.data('size') || 'medium'
-                    });
-                }
-            });
+                    if (type === 'collection') {
+                        const id = $el.data('id');
+                        const original = this.findItemById(this.tree.items, id) || {};
+                        
+                        items.push({
+                            type: 'collection',
+                            id: id,
+                            title: $el.find('.lh-collection-title-input').val(),
+                            settings: original.settings || {},
+                            children: serialize($el.find('.lh-collection-children').first()),
+                            isExpanded: !$el.find('.lh-collection-content').hasClass('collapsed')
+                        });
+                    } else if (type === 'link') {
+                         const linkId = parseInt($el.data('link-id'));
+                         const original = this.findItemById(this.tree.items, linkId);
+                         if (original) {
+                             items.push(original);
+                         } else {
+                             // Fallback if not found (shouldn't happen)
+                             items.push({ type: 'link', link_id: linkId });
+                         }
+                    }
+                });
+                return items;
+            };
+
+            const items = serialize(this.els.linksContainer);
+            this.tree.items = items;
 
             try {
                 await this.api(`/trees/${this.treeId}/links`, {
                     method: 'PUT',
                     body: JSON.stringify({ items })
                 });
-                this.tree.items = items;
                 this.showSaved();
                 this.refreshPreview();
             } catch (error) {
                 console.error('Failed to save links order:', error);
                 this.showError();
             }
+        },
+
+        /**
+         * Find item by ID in nested structure
+         */
+        findItemById(items, id) {
+             if (!items) return null;
+             for (const item of items) {
+                 if (item.type === 'collection') {
+                     if (item.id === id) return item;
+                     const found = this.findItemById(item.children, id);
+                     if (found) return found;
+                 } else {
+                     if (item.link_id === id) return item;
+                 }
+             }
+             return null;
         },
 
         /**
@@ -1085,24 +1242,32 @@
         },
 
         /**
-         * Add a heading
+         * Add a heading (converted to Collection)
          */
         addHeading() {
             const text = $('#lh-new-heading-text').val().trim();
-            const size = $('#lh-new-heading-size').val();
-
+            // Size ignored for collections for now
+            
             if (!text) {
                 alert(lhTreeBuilder.strings.enterHeading);
                 return;
             }
 
             this.tree.items.push({
-                type: 'heading',
-                text,
-                size
+                type: 'collection',
+                id: 'col_' + Date.now(),
+                title: text,
+                settings: { 
+                    borderEnabled: true, 
+                    borderColor: '#000000', 
+                    borderWidth: '2px', 
+                    headerBgColor: 'transparent'
+                },
+                children: [],
+                isExpanded: true
             });
 
-            this.renderCards();
+            this.renderTree(); // Renders fully
             this.saveLinksOrder();
             this.closeModals();
         },
@@ -1153,6 +1318,10 @@
             const fileInput = $('#lh-import-file')[0];
             if (!fileInput.files.length) return;
 
+            const $btn = $('#lh-import-btn');
+            const originalText = $btn.text();
+            $btn.prop('disabled', true).text('Importing...');
+
             const file = fileInput.files[0];
             const reader = new FileReader();
 
@@ -1164,11 +1333,24 @@
                         body: JSON.stringify(data)
                     });
                     alert('Import successful! Reloading...');
+                    
+                    // Reset UI
+                    fileInput.value = '';
+                    $btn.text(originalText); // Remain disabled via change handler logic effectively, but let's be explicit
+                    // The change handler enables it only when files > 0. Since we cleared it:
+                    $btn.prop('disabled', true);
+
                     this.loadTree(this.treeId);
                 } catch (error) {
                     console.error('Import failed:', error);
                     alert('Import failed: ' + error.message);
+                    $btn.prop('disabled', false).text(originalText);
                 }
+            };
+            
+            reader.onerror = () => {
+                alert('Failed to read file');
+                $btn.prop('disabled', false).text(originalText);
             };
 
             reader.readAsText(file);
@@ -1187,6 +1369,10 @@
             if (!confirm('This will import links from the Clickwhale CSV file. Continue?')) {
                 return;
             }
+
+            const $btn = $('#lh-import-clickwhale-btn');
+            const originalText = $btn.text();
+            $btn.prop('disabled', true).text('Processing...');
 
             const file = fileInput.files[0];
             const formData = new FormData();
@@ -1213,13 +1399,16 @@
                     message += `\n\nWarnings:\n${result.errors.join('\n')}`;
                 }
                 alert(message);
+                
                 fileInput.value = '';
-                $('#lh-import-clickwhale-btn').prop('disabled', true);
+                $btn.text(originalText).prop('disabled', true); // Reset and disable since file is gone
+                
                 this.loadTree(this.treeId);
                 this.loadAllLinks();
             } catch (error) {
                 console.error('Clickwhale CSV import failed:', error);
                 alert('Import failed: ' + error.message);
+                $btn.text(originalText).prop('disabled', false);
             }
         },
 

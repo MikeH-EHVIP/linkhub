@@ -66,7 +66,7 @@ if (!defined('ABSPATH')) {
                 <!-- Header (shown on all views) -->
                 <header class="lh-builder-header">
                     <div class="lh-header-title">
-                        <h1 id="lh-tree-title" contenteditable="true" spellcheck="false"></h1>
+                        <h1 id="lh-tree-title"></h1>
                         <span class="lh-status-badge" id="lh-tree-status"></span>
                     </div>
                     <div class="lh-header-actions">
@@ -116,6 +116,11 @@ if (!defined('ABSPATH')) {
                         <p class="lh-view-description"><?php esc_html_e('Customize your profile header that appears at the top of your link tree.', 'linkhub'); ?></p>
                     </div>
                     <div class="lh-settings-form">
+                        <div class="lh-form-group">
+                            <label for="lh-profile-title"><?php esc_html_e('Display Name / Title', 'linkhub'); ?></label>
+                            <input type="text" id="lh-profile-title" placeholder="<?php esc_attr_e('e.g. My Link Tree', 'linkhub'); ?>">
+                        </div>
+
                         <div class="lh-form-group">
                             <label><?php esc_html_e('Profile Image', 'linkhub'); ?></label>
                             <div class="lh-image-upload" id="lh-header-image-upload">

@@ -2,11 +2,27 @@
 # Creates a clean distribution-ready ZIP file
 
 param(
-    [string]$Version = "0.3.0",
+    [string]$Version,
     [string]$OutputDir = "dist"
 )
 
 $ErrorActionPreference = "Stop"
+
+# Auto-detect version from linkhub.php if not provided
+$pluginFile = Join-Path $PSScriptRoot "linkhub.php"
+if ([string]::IsNullOrEmpty($Version)) {
+    if (Test-Path $pluginFile) {
+        $content = Get-Content $pluginFile -Raw
+        if ($content -match "Version:\s+([0-9.]+)") {
+            $Version = $matches[1]
+            Write-Host "Auto-detected version: $Version" -ForegroundColor Cyan
+        } else {
+            Write-Error "Could not detect version from linkhub.php"
+        }
+    } else {
+        Write-Error "linkhub.php not found"
+    }
+}
 
 Write-Host "LinkHub Build Script" -ForegroundColor Cyan
 Write-Host "===================" -ForegroundColor Cyan
@@ -136,7 +152,7 @@ Write-Host "Size: $zipSizeMB MB" -ForegroundColor Yellow
 Write-Host ""
 
 # Copy to local WordPress test site
-$testSitePluginDir = "E:\laragon\www\WordPress-Test-Site\wp-content\plugins\linkhub"
+$testSitePluginDir = "E:\laragon\www\linkhub\wp-content\plugins\linkhub"
 Write-Host "Copying to test site..." -ForegroundColor Gray
 
 if (Test-Path $testSitePluginDir) {

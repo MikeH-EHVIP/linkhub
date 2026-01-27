@@ -71,9 +71,17 @@ class TreeBuilderPage {
 
         // Enqueue our JS
         wp_enqueue_script(
+            'sortable-js',
+            LH_PLUGIN_URL . 'assets/js/libs/Sortable.min.js',
+            [],
+            '1.15.0',
+            true
+        );
+
+        wp_enqueue_script(
             'lh-tree-builder',
             LH_PLUGIN_URL . 'assets/js/tree-builder.js',
-            ['jquery', 'wp-color-picker', 'wp-api-fetch'],
+            ['jquery', 'wp-color-picker', 'wp-api-fetch', 'sortable-js'],
             LH_VERSION,
             true
         );

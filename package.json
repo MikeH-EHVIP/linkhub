@@ -1,6 +1,6 @@
-﻿{
+{
   "name": "@elysevipatd/linkhub",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "Create beautiful link-in-bio pages for WordPress with CPT-based link management and click tracking",
   "main": "dist/index.js",
   "scripts": {
@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "sortablejs": "^1.15.6"
   }
 }

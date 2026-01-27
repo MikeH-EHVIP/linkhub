@@ -165,8 +165,11 @@
     flex: 1;
     text-align: center;
     font-weight: 600;
-    font-size: clamp(0.875rem, 3.5vw, 1.125rem);
+    font-size: clamp(12px, 4vw, 18px); /* Scales between 12px-18px over 300px-450px width range efficiently */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* More dots on right */
@@ -226,9 +229,12 @@
     flex: 1;
     text-align: center;
     font-weight: 600;
-    font-size: clamp(0.875rem, 2vw, 1rem);
+    font-size: clamp(11px, 4vw, 16px);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .lh-card-style .lh-card-more {
@@ -590,7 +596,7 @@ body.admin-bar.lh-tree-page {
 
 .lh-tree-title {
     margin: 0 0 12px 0;
-    font-size: clamp(1.5rem, 5vw, 2rem);
+    font-size: clamp(20px, 6vw, 32px);
     font-weight: 700;
     color: #1a1a1a;
     padding: 0 20px;
@@ -827,3 +833,47 @@ body.admin-bar.lh-tree-page {
         height: 18px;
     }
 }
+
+/* Collections */
+.lh-collection {
+    margin-bottom: 20px;
+    border-radius: 4px; 
+    overflow: hidden; 
+    width: 100%;
+}
+.lh-collection-title {
+    padding: 12px 15px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.lh-collection-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; 
+    padding: 15px;
+}
+
+
+/* Collections */
+.lh-collection {
+    margin-bottom: 20px;
+    border-radius: 4px; 
+    overflow: hidden; 
+    width: 100%;
+}
+.lh-collection-title {
+    padding: 12px 15px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.lh-collection-items {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; 
+    padding: 15px;
+}
+
