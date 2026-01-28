@@ -51,6 +51,11 @@
     background: var(--lh-bg);
 }
 
+/* Mobile Overlay - Default hidden */
+.lh-mobile-overlay {
+    display: none;
+}
+
 @media (max-width: 1400px) {
     .lh-tree-builder {
         --lh-sidebar-width: 240px;
@@ -70,9 +75,45 @@
 @media (max-width: 900px) {
     .lh-tree-builder {
         grid-template-columns: 1fr;
+        position: relative;
     }
     .lh-builder-sidebar {
+        display: block; /* Change from none to block for transform to work */
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    .lh-builder-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    .lh-mobile-sidebar-header {
+        display: flex !important;
+    }
+    
+    /* Overlay when menu is open */
+    .lh-mobile-overlay {
         display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+    .lh-mobile-overlay.active {
+        display: block;
+    }
+
+    #lh-mobile-menu-toggle {
+        display: flex !important;
     }
 }
 

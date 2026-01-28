@@ -68,6 +68,33 @@
          * Bind event listeners
          */
         bindEvents() {
+            // Mobile Menu Toggle
+            $('#lh-mobile-menu-toggle').on('click', (e) => {
+                e.stopPropagation();
+                $('.lh-builder-sidebar').addClass('mobile-open');
+                $('.lh-mobile-overlay').addClass('active');
+            });
+
+            // Close Mobile Menu Button
+            $('.lh-mobile-menu-close').on('click', () => {
+                $('.lh-builder-sidebar').removeClass('mobile-open');
+                $('.lh-mobile-overlay').removeClass('active');
+            });
+
+            // Close Mobile Menu when clicking overlay
+            $('.lh-mobile-overlay').on('click', () => {
+                $('.lh-builder-sidebar').removeClass('mobile-open');
+                $('.lh-mobile-overlay').removeClass('active');
+            });
+
+            // Close Mobile Menu when clicking a nav item
+            $('.lh-settings-nav-list button, .lh-tree-list button').on('click', () => {
+                if ($(window).width() <= 900) {
+                    $('.lh-builder-sidebar').removeClass('mobile-open');
+                    $('.lh-mobile-overlay').removeClass('active');
+                }
+            });
+
             // Add buttons
             this.els.addLinkBtn.on('click', () => this.openModal('create-link'));
             this.els.addHeadingBtn.on('click', () => this.openModal('add-heading'));

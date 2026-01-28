@@ -12,9 +12,15 @@ if (!defined('ABSPATH')) {
 ?>
 <div class="wrap lh-tree-builder-wrap">
     <div class="lh-tree-builder" id="lh-tree-builder" data-tree-id="<?php echo esc_attr($tree_id); ?>">
+        
+        <div class="lh-mobile-overlay"></div>
 
         <!-- Left Sidebar: Settings Navigation -->
         <aside class="lh-builder-sidebar">
+            <div class="lh-mobile-sidebar-header" style="display: none; padding: 15px; border-bottom: 1px solid #eee; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 16px; font-weight: 700;">Menu</h2>
+                <button type="button" class="lh-mobile-menu-close" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666; padding: 0;">&times;</button>
+            </div>
             <div class="lh-sidebar-section lh-tree-settings-nav" id="lh-tree-settings-nav">
                 <h3><?php esc_html_e('Tree Settings', 'linkhub'); ?></h3>
                 <ul class="lh-settings-nav-list">
@@ -72,6 +78,9 @@ if (!defined('ABSPATH')) {
                 <!-- Header (shown on all views) -->
                 <header class="lh-builder-header">
                     <div class="lh-header-title">
+                        <button type="button" id="lh-mobile-menu-toggle" class="lh-btn lh-btn-secondary lh-btn-icon" style="display: none; margin-right: 10px;">
+                            <span class="dashicons dashicons-menu"></span>
+                        </button>
                         <h1 id="lh-tree-title"></h1>
                         <span class="lh-status-badge" id="lh-tree-status"></span>
                     </div>
