@@ -41,12 +41,20 @@ class TreeRenderer {
      * Enqueue frontend styles for tree pages
      */
     public static function enqueue_frontend_styles() {
-        if (is_singular(TreePostType::POST_TYPE)) {
+        if (is_singular(TreePostType::POST_TYPE) || is_post_type_archive(TreePostType::POST_TYPE)) {
             wp_enqueue_style(
                 'lh-frontend',
                 LH_PLUGIN_URL . 'assets/css/modules.css',
                 [],
                 LH_VERSION
+            );
+
+            wp_enqueue_script(
+                'lh-frontend-js',
+                LH_PLUGIN_URL . 'assets/js/modules.js',
+                ['jquery'], // Depend on jQuery
+                LH_VERSION,
+                true // In footer
             );
         }
     }
@@ -58,8 +66,8 @@ class TreeRenderer {
      * @return string Modified content
      */
     public static function render_tree_content($content) {
-        // Only modify content for tree posts on singular views
-        if (!is_singular(TreePostType::POST_TYPE)) {
+        // Only modify content for tree posts on singular views or archive
+        if (!is_singular(TreePostType::POST_TYPE) && !is_post_type_archive(TreePostType::POST_TYPE)) {
             return $content;
         }
 
@@ -90,6 +98,8 @@ class TreeRenderer {
         $title_font = get_post_meta($post->ID, TreePostType::META_TITLE_FONT, true) ?: 'system';
         $body_font = get_post_meta($post->ID, TreePostType::META_BODY_FONT, true) ?: 'system';
         $heading_size = get_post_meta($post->ID, TreePostType::META_HEADING_SIZE, true) ?: 'medium';
+        $featured_title = get_post_meta($post->ID, 'lh_featured_title', true) ?: __('Featured', 'linkhub');
+        $featured_show_title = get_post_meta($post->ID, 'lh_featured_show_title', true);
 
         // Get the tree's links
         $tree_links = get_post_meta($post->ID, TreePostType::META_TREE_LINKS, true);
@@ -118,12 +128,55 @@ class TreeRenderer {
             return $output;
         }
 
+        // Separate Featured Links
+        $featured_links = [];
+        $regular_links = []; // We will rebuild the structure without featured links
+
+        // Helper to recursively find featured links
+        $extract_featured = function($items) use (&$featured_links, &$extract_featured) {
+             $cleaned = [];
+             foreach ($items as $item) {
+                 if (is_array($item) && isset($item['type']) && $item['type'] === 'collection') {
+                     // Recurse into collection
+                     $item['children'] = $extract_featured($item['children'] ?? []);
+                     $cleaned[] = $item;
+                 } else {
+                     // Check if link and featured
+                     $is_link = (isset($item['type']) && $item['type'] === 'link') || (!isset($item['type']) && isset($item['link_id']));
+                     $featured = !empty($item['featured']) && $item['featured'] !== 'false';
+                     
+                     if ($is_link && $featured) {
+                         $featured_links[] = $item;
+                     } else {
+                         $cleaned[] = $item;
+                     }
+                 }
+             }
+             return $cleaned;
+        };
+
+        // Run extraction
+        $regular_links = $extract_featured($tree_links);
+
+
         // Render links section
         $output .= '<div class="lh-tree-links">';
         
-        // Use recursive renderer
-        $output .= self::render_items($tree_links);
+        // Render Featured Section
+        if (!empty($featured_links)) {
+            $output .= '<div class="lh-featured-section">';
+            if ($featured_show_title) {
+                $output .= '<h3 class="lh-featured-title" style="text-align: center; margin: 20px 0 10px; opacity: 0.8; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">' . esc_html($featured_title) . '</h3>';
+            }
+            $output .= self::render_items($featured_links);
+            // $output .= '<hr style="margin: 20px 0; border: 0; border-top: 1px solid rgba(0,0,0,0.1);">'; 
+            // Separator between featured and regular? Maybe just space.
+            $output .= '</div>';
+        }
 
+        // Use recursive renderer for remaining links
+        $output .= self::render_items($regular_links);
+        
         $output .= '</div>'; // Close lh-tree-links
         $output .= '</div>'; // Close lh-tree
 
@@ -436,7 +489,6 @@ class TreeRenderer {
              $classes[] = 'lh-collection-has-border';
              $color = $settings['borderColor'] ?? '#000';
              $width = ($settings['borderWidth'] ?? '2px'); 
-             $style .= "border: {$width} solid {$color};";
         }
 
         // Output
@@ -446,7 +498,7 @@ class TreeRenderer {
             if (!empty($settings['headerBgColor'])) {
                 $header_style = 'background-color:' . esc_attr($settings['headerBgColor']);
             }
-            $html .= '<div class="lh-collection-title" style="' . esc_attr($header_style) . '">' . esc_html($title) . '<span class="lh-collection-toggle dashicons dashicons-arrow-down-alt2"></span></div>';
+            $html .= '<div class="lh-collection-title" style="' . esc_attr($header_style) . '">' . esc_html($title) . '</div>';
         }
         $html .= '<div class="lh-collection-items">';
         if (!empty($children)) {

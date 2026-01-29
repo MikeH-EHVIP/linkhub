@@ -152,7 +152,7 @@ Write-Host "Size: $zipSizeMB MB" -ForegroundColor Yellow
 Write-Host ""
 
 # Copy to local WordPress test site
-$testSitePluginDir = "E:\laragon\www\linkhub\wp-content\plugins\linkhub"
+$testSitePluginDir = "E:\www\linkhub\wp-content\plugins\linkhub"
 Write-Host "Copying to test site..." -ForegroundColor Gray
 
 if (Test-Path $testSitePluginDir) {

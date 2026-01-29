@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-01-28
+
+### New Feature: Analytics
+- **Analytics Dashboard**: Comprehensive view of link performance with interactive charts and click tracking.
+- **Date Filtering**: Analyze performance over Last 7 Days, 30 Days, or custom ranges.
+- **Top Links**: Visual leaderboard of most popular links.
+- **Link Comparison**: Mode to select specific links (including nested ones) and compare their performance on a single chart.
+
+### Improved
+- **Collections System**: Refined drag-and-drop, nested recursion support, and direct "Add to Collection" workflows.
+- **Archive Page**: Support for `/links` archive page as the root tree view.
+- **Import/Export**: Rewritten recursive engine for robust JSON/CSV handling (including images).
+- **UX**: Added "Saving..." states, better modal management, and improved visual feedback.
+
+### Fixed
+- **Link Placement**: New links now default to the top of the list (below Featured) instead of bottom.
+- **Settings**: Fixed `featured_title` and `featured_show_title` persistence.
+- **Modals**: Fixed CSS z-index issues causing overlays to block the UI.
+- **Collections**: Fixed edit button functionality for items inside collections.
+
 ## [0.4.11] - 2026-01-27
 
 ### Fixed

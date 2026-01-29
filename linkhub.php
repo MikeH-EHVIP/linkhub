@@ -3,7 +3,7 @@
  * Plugin Name: LinkHub
  * Plugin URI: https://github.com/MikeH-EHVIP/linkhub
  * Description: Create beautiful link-in-bio pages with CPT-based link management and click tracking
- * Version: 0.4.12
+ * Version: 0.5.0
  * Author: ElyseVIP
  * Author URI: https://elysevipatd.com
  * License: GPL-2.0+

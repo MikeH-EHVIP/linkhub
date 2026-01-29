@@ -153,6 +153,22 @@ if (!defined('ABSPATH')) {
                             <label for="lh-about-text"><?php esc_html_e('Bio / About Text', 'linkhub'); ?></label>
                             <textarea id="lh-about-text" rows="3" placeholder="<?php esc_attr_e('Tell visitors about yourself...', 'linkhub'); ?>"></textarea>
                         </div>
+
+                        <!-- Featured Section Settings -->
+                        <div class="lh-settings-section-title" style="margin-top: 20px;">
+                            <?php esc_html_e('Featured Links Section', 'linkhub'); ?>
+                        </div>
+                        <div class="lh-form-group">
+                            <label for="lh-featured-title"><?php esc_html_e('Section Title', 'linkhub'); ?></label>
+                            <input type="text" id="lh-featured-title" placeholder="<?php esc_attr_e('Featured Links', 'linkhub'); ?>">
+                        </div>
+                        <div class="lh-form-group lh-form-group-inline">
+                            <label>
+                                <input type="checkbox" id="lh-featured-show-title">
+                                <?php esc_html_e('Show section title', 'linkhub'); ?>
+                            </label>
+                        </div>
+                        
                         <div class="lh-form-group">
                             <label for="lh-tree-slug"><?php esc_html_e('Page URL (slug)', 'linkhub'); ?></label>
                             <input type="text" id="lh-tree-slug" placeholder="<?php esc_attr_e('my-links', 'linkhub'); ?>">
@@ -448,11 +464,24 @@ if (!defined('ABSPATH')) {
                 <input type="url" id="lh-new-link-url" placeholder="https://example.com">
             </div>
             <div class="lh-form-group">
+                <label for="lh-new-link-collection"><?php esc_html_e('Add to Collection', 'linkhub'); ?></label>
+                <select id="lh-new-link-collection">
+                    <option value=""><?php esc_html_e('-- None (Top Level) --', 'linkhub'); ?></option>
+                    <!-- Populated via JS -->
+                </select>
+            </div>
+            <div class="lh-form-group">
                 <label for="lh-new-link-style"><?php esc_html_e('Display Style', 'linkhub'); ?></label>
                 <select id="lh-new-link-style">
                     <option value="bar"><?php esc_html_e('Bar (Button)', 'linkhub'); ?></option>
                     <option value="card"><?php esc_html_e('Card (With Image)', 'linkhub'); ?></option>
                 </select>
+            </div>
+            <div class="lh-form-group">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="lh-new-link-featured">
+                    <?php esc_html_e('Feature this link (Pin to top)', 'linkhub'); ?>
+                </label>
             </div>
             <div class="lh-form-group">
                 <label><?php esc_html_e('Image (Optional)', 'linkhub'); ?></label>
@@ -496,6 +525,12 @@ if (!defined('ABSPATH')) {
                     <option value="bar"><?php esc_html_e('Bar (Button)', 'linkhub'); ?></option>
                     <option value="card"><?php esc_html_e('Card (With Image)', 'linkhub'); ?></option>
                 </select>
+            </div>
+            <div class="lh-form-group">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="lh-edit-link-featured">
+                    <?php esc_html_e('Feature this link (Pin to top)', 'linkhub'); ?>
+                </label>
             </div>
             <div class="lh-form-group">
                 <label><?php esc_html_e('Image (Optional)', 'linkhub'); ?></label>
@@ -592,6 +627,13 @@ if (!defined('ABSPATH')) {
                     <option value=""><?php esc_html_e('-- Select a link --', 'linkhub'); ?></option>
                 </select>
             </div>
+            <div class="lh-form-group">
+                <label for="lh-existing-link-collection"><?php esc_html_e('Add to Collection', 'linkhub'); ?></label>
+                <select id="lh-existing-link-collection">
+                    <option value=""><?php esc_html_e('-- None (Top Level) --', 'linkhub'); ?></option>
+                    <!-- Populated via JS -->
+                </select>
+            </div>
         </div>
         <div class="lh-modal-footer">
             <button type="button" class="lh-btn lh-btn-secondary lh-modal-cancel"><?php esc_html_e('Cancel', 'linkhub'); ?></button>
@@ -622,9 +664,23 @@ if (!defined('ABSPATH')) {
                 </div>
             </div>
         </div>
-        <div class="lh-modal-footer">
-            <button type="button" class="lh-btn lh-btn-secondary" id="lh-analytics-modal-cancel"><?php esc_html_e('Cancel', 'linkhub'); ?></button>
-            <button type="button" class="lh-btn lh-btn-primary" id="lh-analytics-modal-apply"><?php esc_html_e('Apply Comparison', 'linkhub'); ?></button>
+        </div>
+    </div>
+</div>
+
+<!-- Import Progress Modal -->
+<div class="lh-modal" id="lh-import-progress-modal">
+    <div class="lh-modal-overlay"></div>
+    <div class="lh-modal-content" style="max-width: 400px; height: auto; min-height: 0;">
+        <div class="lh-modal-header">
+            <h3><span class="dashicons dashicons-update lh-spin" style="margin-right: 8px;"></span><?php esc_html_e('Importing...', 'linkhub'); ?></h3>
+        </div>
+        <div class="lh-modal-body">
+            <p><?php esc_html_e('Your tree data is being imported. This may take a few moments, especially if we are downloading images.', 'linkhub'); ?></p>
+            <div class="lh-progress-bar-container" style="background:#f0f0f1; border-radius:4px; height:8px; margin-top:15px; overflow:hidden;">
+                <div class="lh-progress-bar" style="background:var(--lh-primary); height:100%; width:100%; animation: lh-progress-indeterminate 2s infinite linear;"></div>
+            </div>
+            <p class="lh-progress-text" style="text-align:center; font-size:12px; color:#666; margin-top:8px;"><?php esc_html_e('Processing...', 'linkhub'); ?></p>
         </div>
     </div>
 </div>

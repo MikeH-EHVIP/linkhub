@@ -618,6 +618,23 @@
     color: var(--lh-danger);
 }
 
+.lh-card-actions .lh-feature-btn {
+    color: #ccc;
+}
+.lh-card-actions .lh-feature-btn.active {
+    color: #ffb900;
+}
+.lh-card-actions .lh-feature-btn:hover {
+    color: #e6a700;
+    background: #fff8e5;
+}
+
+.lh-card-featured {
+    border-color: #ffb900 !important;
+    background: #fffdf5;
+    box-shadow: 0 0 5px rgba(255, 185, 0, 0.2);
+}
+
 /* Heading Card */
 .lh-heading-card {
     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
@@ -988,7 +1005,9 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
 }
+
 
 .lh-modal-content {
     position: relative;
@@ -1130,6 +1149,32 @@
     border-bottom: 1px solid var(--lh-border-light);
     gap: 10px;
 }
+.lh-collection-actions {
+    display: flex;
+    gap: 4px;
+}
+.lh-collection-actions button {
+    padding: 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--lh-text-light);
+    border-radius: var(--lh-radius-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.lh-collection-actions button:hover {
+    background: var(--lh-secondary);
+    color: var(--lh-text);
+}
+.lh-collection-actions .lh-add-to-collection-btn {
+    color: var(--lh-primary);
+}
+.lh-collection-actions .lh-add-to-collection-btn:hover {
+    background: rgba(34, 113, 177, 0.1);
+    color: var(--lh-primary-hover);
+}
 .lh-collection-info {
     flex: 1;
     display: flex;
@@ -1179,3 +1224,20 @@
     }
 }
 
+/* Spinner Utility */
+.lh-spin {
+    animation: lh-spin 1s linear infinite;
+}
+
+@keyframes lh-progress-indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Modal Small Variant for Alerts/Progress */
+.lh-modal.lh-modal-small {
+    width: 400px;
+    max-width: 90vw;
+    height: auto;
+    max-height: none;
+}

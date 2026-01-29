@@ -96,7 +96,10 @@
             });
 
             // Add buttons
-            this.els.addLinkBtn.on('click', () => this.openModal('create-link'));
+            this.els.addLinkBtn.on('click', () => {
+                this.populateCollectionSelects(null);
+                this.openModal('create-link');
+            });
             this.els.addHeadingBtn.on('click', () => this.openModal('add-heading'));
             this.els.addExistingBtn.on('click', () => this.openExistingLinkModal());
 
@@ -167,6 +170,12 @@
                 })
                 .on('change', '.lh-collection-title-input', (e) => {
                      this.saveLinksOrder(); // Syncs title change
+                })
+                .on('click', '.lh-add-to-collection-btn', (e) => {
+                    const $card = $(e.currentTarget).closest('.lh-collection-card');
+                    const collectionId = $card.data('id');
+                    this.populateCollectionSelects(collectionId);
+                    this.openModal('create-link');
                 })
                 .on('click', '.lh-collection-settings-btn', (e) => {
                     // Placeholder for future UI
@@ -307,6 +316,9 @@
 
             // Create link submit
             $('#lh-create-link-submit').on('click', () => this.createLink());
+
+            // Toggle Featured Link Button (Delegate)
+            this.els.linksContainer.on('click', '.lh-feature-btn', (e) => this.toggleFeatured(e));
 
             // Edit link submit
             $('#lh-edit-link-submit').on('click', () => this.saveEditedLink());
@@ -482,7 +494,7 @@
                         id: 'col_' + Date.now() + Math.floor(Math.random() * 1000),
                         title: item.text,
                         settings: {
-                            borderEnabled: true,
+                            borderEnabled: false,
                             borderColor: '#000000',
                             borderWidth: '2px',
                             headingSize: item.size || 'medium'
@@ -623,9 +635,14 @@
             const thumbHtml = item.image_url
                 ? `<img src="${this.escapeAttr(item.image_url)}" alt="">`
                 : '<span class="dashicons dashicons-admin-links"></span>';
+            
+            const isFeatured = item.featured === true;
+            const featuredClass = isFeatured ? 'active' : '';
+            const featuredIcon = isFeatured ? 'dashicons-star-filled' : 'dashicons-star-empty';
+            const featuredTitle = isFeatured ? 'Unfeature Link' : 'Feature Link';
 
             return `
-                <div class="lh-link-card" data-type="link" data-link-id="${item.link_id}">
+                <div class="lh-link-card ${isFeatured ? 'lh-card-featured' : ''}" data-type="link" data-link-id="${item.link_id}" data-featured="${isFeatured}">
                     <span class="lh-drag-handle dashicons dashicons-menu"></span>
                     <div class="lh-card-thumb">${thumbHtml}</div>
                     <div class="lh-card-info">
@@ -637,6 +654,9 @@
                         ${item.click_count || 0}
                     </div>
                     <div class="lh-card-actions">
+                        <button type="button" class="lh-feature-btn ${featuredClass}" title="${featuredTitle}">
+                            <span class="dashicons ${featuredIcon}"></span>
+                        </button>
                         <button type="button" class="lh-edit-btn" title="Edit">
                             <span class="dashicons dashicons-edit"></span>
                         </button>
@@ -665,6 +685,9 @@
                             <span class="lh-collection-count">${(item.children || []).length} links</span>
                         </div>
                         <div class="lh-collection-actions">
+                            <button type="button" class="lh-add-to-collection-btn" title="Add Link to Collection">
+                                <span class="dashicons dashicons-plus"></span>
+                            </button>
                             <button type="button" class="lh-collection-settings-btn" title="Collection Settings">
                                 <span class="dashicons dashicons-art"></span>
                             </button>
@@ -721,6 +744,7 @@
 
             // Text fields
             $('#lh-about-text').val(s.about_text || '');
+            $('#lh-featured-title').val(s.featured_title || 'Featured');
 
             // Selects
             $('#lh-hero-shape').val(s.hero_shape || 'round');
@@ -731,6 +755,7 @@
 
             // Checkboxes
             $('#lh-hero-fade').prop('checked', s.hero_fade);
+            $('#lh-featured-show-title').prop('checked', s.featured_show_title);
             $('#lh-hide-header-footer').prop('checked', s.hide_header_footer);
 
             // Colors - need to use wpColorPicker API
@@ -809,18 +834,55 @@
         },
 
         /**
+         * Show saving status
+         */
+        showSaving() {
+            const $btn = $('#lh-save-btn');
+            // Store original content if not already stored
+            if (!$btn.data('original-html')) {
+                $btn.data('original-html', $btn.html());
+            }
+            $btn.prop('disabled', true)
+                .html('<span class="dashicons dashicons-update lh-spin"></span> Saving...');
+        },
+
+        /**
          * Show saved status
          */
         showSaved() {
             this.isDirty = false;
-            $('#lh-save-btn').prop('disabled', true);
+            const $btn = $('#lh-save-btn');
+            
+            // Store original content if not already stored
+            if (!$btn.data('original-html')) {
+                $btn.data('original-html', $btn.html());
+            }
+
+            $btn.prop('disabled', true)
+                .html('<span class="dashicons dashicons-yes"></span> Saved!');
+
+            // Revert message after delay
+            setTimeout(() => {
+                if ($btn.data('original-html')) {
+                    $btn.html($btn.data('original-html'));
+                }
+                // If user made changes during the delay, re-enable
+                if (this.isDirty) {
+                    $btn.prop('disabled', false);
+                }
+            }, 2000);
         },
 
         /**
          * Show error status
          */
         showError() {
-            // Error is shown via alert in the calling code
+            const $btn = $('#lh-save-btn');
+            if ($btn.data('original-html')) {
+                $btn.html($btn.data('original-html'));
+            }
+            $btn.prop('disabled', false);
+            alert('Failed to save settings. Please check console for details.');
         },
 
         /**
@@ -828,6 +890,8 @@
          */
         async saveSettings() {
             if (!this.treeId) return;
+
+            this.showSaving();
 
             const settings = this.collectSettings();
             const title = $('#lh-profile-title').val().trim();
@@ -858,6 +922,8 @@
                 title: this.els.treeTitle.text().trim(),
                 header_image_id: parseInt($('#lh-header-image-id').val()) || null,
                 about_text: $('#lh-about-text').val(),
+                featured_title: $('#lh-featured-title').val(),
+                featured_show_title: $('#lh-featured-show-title').is(':checked'),
                 hero_shape: $('#lh-hero-shape').val(),
                 hero_fade: $('#lh-hero-fade').is(':checked'),
                 social_style: $('#lh-social-style').val(),
@@ -1008,6 +1074,39 @@
         },
 
         /**
+         * Toggle Featured Status
+         */
+        toggleFeatured(e) {
+            e.preventDefault();
+            const $btn = $(e.currentTarget);
+            const $card = $btn.closest('.lh-link-card');
+            const linkId = parseInt($card.data('link-id'));
+
+            // Find item in tree model
+            const item = this.findItemById(this.tree.items, linkId);
+            if (!item) return;
+
+            // Toggle state
+            item.featured = !item.featured;
+            
+            // Update UI
+            if (item.featured) {
+                $btn.addClass('active').prop('title', 'Unfeature Link');
+                $btn.find('.dashicons').removeClass('dashicons-star-empty').addClass('dashicons-star-filled');
+                $card.addClass('lh-card-featured');
+                $card.attr('data-featured', 'true');
+            } else {
+                $btn.removeClass('active').prop('title', 'Feature Link');
+                $btn.find('.dashicons').removeClass('dashicons-star-filled').addClass('dashicons-star-empty');
+                $card.removeClass('lh-card-featured');
+                $card.attr('data-featured', 'false');
+            }
+
+            // Immediately Save because simple DOM serialization might miss deep property updates if we don't sync
+            this.saveLinksOrder();
+        },
+
+        /**
          * Handle card title change (inline edit)
          */
         async onCardTitleChange(e) {
@@ -1041,8 +1140,10 @@
          */
         onEditLink(e) {
             const $card = $(e.currentTarget).closest('.lh-link-card');
-            const linkId = $card.data('link-id');
-            const item = this.tree.items.find(i => i.type === 'link' && i.link_id === linkId);
+            const linkId = parseInt($card.data('link-id')); // Parse as int for robust comparison
+            
+            // recursively find the item
+            const item = this.findItemById(this.tree.items, linkId);
 
             if (!item) return;
 
@@ -1051,6 +1152,7 @@
             $('#lh-edit-link-title').val(item.title || '');
             $('#lh-edit-link-url').val(item.url || '');
             $('#lh-edit-link-style').val(item.display_style || 'bar');
+            $('#lh-edit-link-featured').prop('checked', item.featured === true);
 
             // Handle image
             if (item.image_id && item.image_url) {
@@ -1075,6 +1177,7 @@
             const url = $('#lh-edit-link-url').val().trim();
             const displayStyle = $('#lh-edit-link-style').val();
             const imageId = $('#lh-edit-link-image-id').val();
+            const featured = $('#lh-edit-link-featured').is(':checked');
 
             if (!title) {
                 alert(lhTreeBuilder.strings.enterTitle);
@@ -1087,6 +1190,7 @@
             }
 
             try {
+                // Update global link data
                 const updatedLink = await this.api(`/links/${linkId}`, {
                     method: 'PUT',
                     body: JSON.stringify({
@@ -1097,17 +1201,16 @@
                     })
                 });
 
-                // Update the item in tree.items
-                const itemIndex = this.tree.items.findIndex(i => i.type === 'link' && i.link_id === linkId);
-                if (itemIndex !== -1) {
-                    this.tree.items[itemIndex] = {
-                        ...this.tree.items[itemIndex],
-                        title: updatedLink.title,
-                        url: updatedLink.url,
-                        display_style: updatedLink.display_style,
-                        image_id: updatedLink.image_id,
-                        image_url: updatedLink.image_url
-                    };
+                // Update the item in tree.items (search recursively using helper)
+                const item = this.findItemById(this.tree.items, linkId);
+                if (item) {
+                     // Update properties in place (reference)
+                     item.title = updatedLink.title;
+                     item.url = updatedLink.url;
+                     item.display_style = updatedLink.display_style;
+                     item.image_id = updatedLink.image_id;
+                     item.image_url = updatedLink.image_url;
+                     item.featured = featured;
                 }
 
                 // Update allLinks as well
@@ -1119,9 +1222,12 @@
                     };
                 }
 
-                // Re-render cards and refresh preview
+                // Re-render cards
                 this.renderCards();
-                this.refreshPreview();
+                
+                // Save tree structure (persists 'featured' status)
+                await this.saveLinksOrder();
+
                 this.closeModals();
 
             } catch (error) {
@@ -1187,11 +1293,43 @@
         },
 
         /**
+         * Populate collection selects in modals
+         */
+        populateCollectionSelects(selectedValue = null) {
+            const $selects = $('#lh-new-link-collection, #lh-existing-link-collection');
+            let options = '<option value="">-- None (Top Level) --</option>';
+
+            // Helper to recursively find collections
+            const findCollections = (items, depth = 0) => {
+                items.forEach(item => {
+                    if (item.type === 'collection') {
+                        const indent = '&nbsp;'.repeat(depth * 3);
+                        options += `<option value="${item.id}">${indent}${this.escapeHtml(item.title)}</option>`;
+                        if (item.children && item.children.length) {
+                            findCollections(item.children, depth + 1);
+                        }
+                    }
+                });
+            };
+
+            if (this.tree && this.tree.items) {
+                findCollections(this.tree.items);
+            }
+
+            $selects.html(options);
+            
+            if (selectedValue) {
+                $selects.val(selectedValue);
+            }
+        },
+
+        /**
          * Open a modal
          */
         openModal(name) {
             $(`#lh-${name}-modal`).addClass('open');
         },
+
 
         /**
          * Close all modals
@@ -1226,6 +1364,7 @@
             ).join('');
 
             $select.html(`<option value="">-- Select a link --</option>${options}`);
+            this.populateCollectionSelects(null);
             this.openModal('add-existing');
         },
 
@@ -1237,6 +1376,8 @@
             const url = $('#lh-new-link-url').val().trim();
             const displayStyle = $('#lh-new-link-style').val();
             const imageId = $('#lh-new-link-image-id').val();
+            const featured = $('#lh-new-link-featured').is(':checked');
+            const targetCollectionId = $('#lh-new-link-collection').val();
 
             if (!title) {
                 alert(lhTreeBuilder.strings.enterTitle);
@@ -1260,12 +1401,29 @@
                 });
 
                 // Add to tree
-                this.tree.items.push(link);
+                const treeItem = { ...link, featured: featured };
+                
+                if (targetCollectionId) {
+                    const collection = this.findItemById(this.tree.items, targetCollectionId);
+                    if (collection && collection.type === 'collection') {
+                        if (!collection.children) collection.children = [];
+                        collection.children.push(treeItem);
+                        // Expand collection to show new link
+                        collection.isExpanded = true;
+                    } else {
+                         // Fallback to top if collection not found
+                         this.tree.items.unshift(treeItem);
+                    }
+                } else {
+                    // Add to TOP of list (under featured)
+                    this.tree.items.unshift(treeItem);
+                }
+                
                 this.allLinks.push(link);
 
-                // Re-render and save
+                // Re-render and save (persists tree structure including featured)
                 this.renderCards();
-                this.saveLinksOrder();
+                await this.saveLinksOrder();
 
                 this.closeModals();
             } catch (error) {
@@ -1291,7 +1449,7 @@
                 id: 'col_' + Date.now(),
                 title: text,
                 settings: { 
-                    borderEnabled: true, 
+                    borderEnabled: false, 
                     borderColor: '#000000', 
                     borderWidth: '2px', 
                     headerBgColor: 'transparent'
@@ -1310,12 +1468,26 @@
          */
         addExistingLink() {
             const linkId = parseInt($('#lh-existing-link-select').val());
+            const targetCollectionId = $('#lh-existing-link-collection').val();
+
             if (!linkId) return;
 
             const link = this.allLinks.find(l => l.link_id === linkId);
             if (!link) return;
 
-            this.tree.items.push(link);
+            if (targetCollectionId) {
+                const collection = this.findItemById(this.tree.items, targetCollectionId);
+                if (collection && collection.type === 'collection') {
+                    if (!collection.children) collection.children = [];
+                    collection.children.push(link);
+                    collection.isExpanded = true;
+                } else {
+                    this.tree.items.unshift(link);
+                }
+            } else {
+                this.tree.items.unshift(link);
+            }
+
             this.renderCards();
             this.saveLinksOrder();
             this.closeModals();
@@ -1349,11 +1521,17 @@
          */
         async importTree() {
             const fileInput = $('#lh-import-file')[0];
-            if (!fileInput.files.length) return;
+            if (!fileInput.files.length) {
+                alert('Please select a file first.');
+                return;
+            }
 
-            const $btn = $('#lh-import-btn');
-            const originalText = $btn.text();
-            $btn.prop('disabled', true).text('Importing...');
+            if (!confirm('This will overwrite current settings and import new links. Continue?')) {
+                return;
+            }
+
+            // Show progress modal
+            $('#lh-import-progress-modal').addClass('open');
 
             const file = fileInput.files[0];
             const reader = new FileReader();
@@ -1365,25 +1543,24 @@
                         method: 'POST',
                         body: JSON.stringify(data)
                     });
-                    alert('Import successful! Reloading...');
                     
-                    // Reset UI
-                    fileInput.value = '';
-                    $btn.text(originalText); // Remain disabled via change handler logic effectively, but let's be explicit
-                    // The change handler enables it only when files > 0. Since we cleared it:
-                    $btn.prop('disabled', true);
+                    // Small delay to ensure user sees completion
+                    setTimeout(() => {
+                        $('#lh-import-progress-modal').removeClass('open');
+                        alert('Import successful! Reloading...');
+                        location.reload();
+                    }, 500);
 
-                    this.loadTree(this.treeId);
                 } catch (error) {
+                    $('#lh-import-progress-modal').removeClass('open');
                     console.error('Import failed:', error);
                     alert('Import failed: ' + error.message);
-                    $btn.prop('disabled', false).text(originalText);
                 }
             };
-            
+
             reader.onerror = () => {
+                $('#lh-import-progress-modal').removeClass('open');
                 alert('Failed to read file');
-                $btn.prop('disabled', false).text(originalText);
             };
 
             reader.readAsText(file);

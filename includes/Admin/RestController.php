@@ -285,6 +285,8 @@ class RestController extends WP_REST_Controller {
                 'body_font'            => TreePostType::META_BODY_FONT,
                 'heading_size'         => TreePostType::META_HEADING_SIZE,
                 'hide_header_footer'   => TreePostType::META_HIDE_HEADER_FOOTER,
+                'featured_title'       => 'lh_featured_title',
+                'featured_show_title'  => 'lh_featured_show_title',
             ];
 
             foreach ($meta_mappings as $key => $meta_key) {
@@ -340,8 +342,9 @@ class RestController extends WP_REST_Controller {
 
             if ($item['type'] === 'link' && isset($item['link_id'])) {
                 $sanitized[] = [
-                    'type'    => 'link',
-                    'link_id' => absint($item['link_id']),
+                    'type'     => 'link',
+                    'link_id'  => absint($item['link_id']),
+                    'featured' => !empty($item['featured']),
                 ];
             } elseif ($item['type'] === 'heading') {
                 $size = isset($item['size']) && in_array($item['size'], ['small', 'medium', 'large'])
@@ -647,6 +650,8 @@ class RestController extends WP_REST_Controller {
             'body_font'             => get_post_meta($tree_id, TreePostType::META_BODY_FONT, true) ?: 'system',
             'heading_size'          => get_post_meta($tree_id, TreePostType::META_HEADING_SIZE, true) ?: 'medium',
             'hide_header_footer'    => get_post_meta($tree_id, TreePostType::META_HIDE_HEADER_FOOTER, true) === '1',
+            'featured_title'        => get_post_meta($tree_id, 'lh_featured_title', true),
+            'featured_show_title'   => get_post_meta($tree_id, 'lh_featured_show_title', true) === '1',
         ];
     }
 
@@ -690,6 +695,7 @@ class RestController extends WP_REST_Controller {
 
             case 'hero_fade':
             case 'hide_header_footer':
+            case 'featured_show_title':
                 return $value ? '1' : '';
 
             case 'title_font':
@@ -722,31 +728,8 @@ class RestController extends WP_REST_Controller {
         // Get tree items (links and headings)
         $items = get_post_meta($tree_id, TreePostType::META_TREE_LINKS, true) ?: [];
 
-        // Prepare links data
-        $links = [];
-        foreach ($items as $item) {
-            if ($item['type'] === 'link' && !empty($item['link_id'])) {
-                $link_post = get_post($item['link_id']);
-                if ($link_post) {
-                    $image_id = get_post_meta($item['link_id'], LinkPostType::META_IMAGE, true);
-                    $image_url = $image_id ? wp_get_attachment_url($image_id) : '';
-                    
-                    $links[] = [
-                        'title'         => $link_post->post_title,
-                        'url'           => get_post_meta($item['link_id'], LinkPostType::META_URL, true),
-                        'display_style' => get_post_meta($item['link_id'], LinkPostType::META_DISPLAY_STYLE, true) ?: 'bar',
-                        'icon'          => get_post_meta($item['link_id'], LinkPostType::META_ICON, true),
-                        'image_url'     => $image_url,
-                    ];
-                }
-            } elseif ($item['type'] === 'heading') {
-                $links[] = [
-                    'type' => 'heading',
-                    'text' => $item['text'] ?? '',
-                    'size' => $item['size'] ?? 'medium',
-                ];
-            }
-        }
+        // Prepare items recursively
+        $export_items = $this->prepare_export_items($items);
 
         return new WP_REST_Response([
             'version'  => '1.0',
@@ -754,9 +737,56 @@ class RestController extends WP_REST_Controller {
             'tree'     => [
                 'title'    => $tree->post_title,
                 'settings' => $settings,
-                'items'    => $links,
+                'items'    => $export_items,
             ],
         ]);
+    }
+
+    /**
+     * Prepare items for export recursively
+     */
+    private function prepare_export_items($items) {
+        $prepared = [];
+
+        foreach ($items as $item) {
+            if (!is_array($item)) continue;
+
+            // Handle legacy format (simple ID)
+            if (isset($item['type']) && $item['type'] === 'link' && isset($item['link_id'])) {
+                $link_post = get_post($item['link_id']);
+                if ($link_post) {
+                    $image_id = get_post_meta($item['link_id'], LinkPostType::META_IMAGE, true);
+                    $image_url = $image_id ? wp_get_attachment_url($image_id) : '';
+                    
+                    $prepared[] = [
+                        'type'          => 'link',
+                        'title'         => $link_post->post_title,
+                        'url'           => get_post_meta($item['link_id'], LinkPostType::META_URL, true),
+                        'display_style' => get_post_meta($item['link_id'], LinkPostType::META_DISPLAY_STYLE, true) ?: 'bar',
+                        'icon'          => get_post_meta($item['link_id'], LinkPostType::META_ICON, true),
+                        'image_url'     => $image_url,
+                        'description'   => get_post_meta($item['link_id'], LinkPostType::META_DESCRIPTION, true),
+                        'featured'      => isset($item['featured']) ? (bool) $item['featured'] : false,
+                    ];
+                }
+            } elseif (isset($item['type']) && $item['type'] === 'heading') {
+                $prepared[] = [
+                    'type' => 'heading',
+                    'text' => $item['text'] ?? '',
+                    'size' => $item['size'] ?? 'medium',
+                ];
+            } elseif (isset($item['type']) && $item['type'] === 'collection') {
+                $prepared[] = [
+                    'type'       => 'collection',
+                    'id'         => $item['id'],
+                    'title'      => $item['title'],
+                    'isExpanded' => $item['isExpanded'] ?? true,
+                    'children'   => $this->prepare_export_items($item['children'] ?? [])
+                ];
+            }
+        }
+
+        return $prepared;
     }
 
     /**
@@ -788,7 +818,24 @@ class RestController extends WP_REST_Controller {
 
         // Update settings if provided
         if (!empty($import_tree['settings'])) {
+            // Handle images first (sideloading)
+            if (!empty($import_tree['settings']['header_image_url'])) {
+                $img_id = $this->import_image_from_url($import_tree['settings']['header_image_url'], $tree_id);
+                if ($img_id) {
+                    $import_tree['settings']['header_image_id'] = $img_id;
+                }
+            }
+            if (!empty($import_tree['settings']['background_image_url'])) {
+                 $img_id = $this->import_image_from_url($import_tree['settings']['background_image_url'], $tree_id);
+                 if ($img_id) {
+                     $import_tree['settings']['background_image_id'] = $img_id;
+                 }
+            }
+
             foreach ($import_tree['settings'] as $key => $value) {
+                // Skip URL fields as they are handled above and map to IDs
+                if ($key === 'header_image_url' || $key === 'background_image_url') continue;
+
                 $sanitized = $this->sanitize_setting($key, $value);
                 $this->save_tree_setting($tree_id, $key, $sanitized);
             }
@@ -796,56 +843,7 @@ class RestController extends WP_REST_Controller {
 
         // Import items (create links as needed)
         if (!empty($import_tree['items'])) {
-            $items = [];
-            foreach ($import_tree['items'] as $item) {
-                if (isset($item['type']) && $item['type'] === 'heading') {
-                    $items[] = [
-                        'type' => 'heading',
-                        'text' => sanitize_text_field($item['text'] ?? ''),
-                        'size' => in_array($item['size'] ?? '', ['small', 'medium', 'large']) ? $item['size'] : 'medium',
-                    ];
-                } else {
-                    // Check if link already exists by URL
-                    $link_id = null;
-                    if (!empty($item['url'])) {
-                        $link_id = $this->find_link_by_url($item['url']);
-                    }
-                    
-                    // If link doesn't exist, create it
-                    if (!$link_id) {
-                        $link_id = wp_insert_post([
-                            'post_type'   => LinkPostType::POST_TYPE,
-                            'post_title'  => sanitize_text_field($item['title'] ?? 'Imported Link'),
-                            'post_status' => 'publish',
-                        ]);
-                    }
-
-                    if (!is_wp_error($link_id) && $link_id) {
-                        if (!empty($item['url'])) {
-                            update_post_meta($link_id, LinkPostType::META_URL, esc_url_raw($item['url']));
-                        }
-                        if (!empty($item['display_style'])) {
-                            update_post_meta($link_id, LinkPostType::META_DISPLAY_STYLE, sanitize_text_field($item['display_style']));
-                        }
-                        if (!empty($item['icon'])) {
-                            update_post_meta($link_id, LinkPostType::META_ICON, sanitize_text_field($item['icon']));
-                        }
-                        // Import image from URL if provided
-                        if (!empty($item['image_url'])) {
-                            $image_id = $this->import_image_from_url($item['image_url'], $link_id);
-                            if ($image_id) {
-                                update_post_meta($link_id, LinkPostType::META_IMAGE, $image_id);
-                            }
-                        }
-
-                        $items[] = [
-                            'type'    => 'link',
-                            'link_id' => $link_id,
-                        ];
-                    }
-                }
-            }
-
+            $items = $this->prepare_import_items($import_tree['items']);
             update_post_meta($tree_id, TreePostType::META_TREE_LINKS, $items);
         }
 
@@ -853,6 +851,79 @@ class RestController extends WP_REST_Controller {
             'success' => true,
             'message' => 'Import completed',
         ]);
+    }
+
+    /**
+     * Prepare items for import recursively
+     */
+    private function prepare_import_items($items) {
+        $prepared = [];
+        
+        foreach ($items as $item) {
+            $type = $item['type'] ?? 'link';
+            
+            if ($type === 'collection') {
+                 $prepared[] = [
+                    'type' => 'collection',
+                    'id' => uniqid('col_'),
+                    'title' => sanitize_text_field($item['title'] ?? ''),
+                    'isExpanded' => isset($item['isExpanded']) ? (bool) $item['isExpanded'] : true,
+                    'children' => $this->prepare_import_items($item['children'] ?? [])
+                 ];
+            } elseif ($type === 'heading') {
+                $prepared[] = [
+                    'type' => 'heading',
+                    'text' => sanitize_text_field($item['text'] ?? ''),
+                    'size' => in_array($item['size'] ?? '', ['small', 'medium', 'large']) ? $item['size'] : 'medium',
+                ];
+            } else {
+                 // Check if link already exists by URL
+                 $link_id = null;
+                 if (!empty($item['url'])) {
+                     $link_id = $this->find_link_by_url($item['url']);
+                 }
+                 
+                 // If link doesn't exist, create it
+                 if (!$link_id) {
+                     $link_id = wp_insert_post([
+                         'post_type'   => LinkPostType::POST_TYPE,
+                         'post_title'  => sanitize_text_field($item['title'] ?? 'Imported Link'),
+                         'post_status' => 'publish',
+                     ]);
+                 }
+
+                 if (!is_wp_error($link_id) && $link_id) {
+                     if (!empty($item['url'])) {
+                         update_post_meta($link_id, LinkPostType::META_URL, esc_url_raw($item['url']));
+                     }
+                     if (!empty($item['display_style'])) {
+                         update_post_meta($link_id, LinkPostType::META_DISPLAY_STYLE, sanitize_text_field($item['display_style']));
+                     }
+                     if (!empty($item['icon'])) {
+                         update_post_meta($link_id, LinkPostType::META_ICON, sanitize_text_field($item['icon']));
+                     }
+                     if (!empty($item['description'])) {
+                         update_post_meta($link_id, LinkPostType::META_DESCRIPTION, sanitize_textarea_field($item['description']));
+                     }
+                     
+                     // Import image from URL if provided
+                     if (!empty($item['image_url'])) {
+                         $image_id = $this->import_image_from_url($item['image_url'], $link_id);
+                         if ($image_id) {
+                             update_post_meta($link_id, LinkPostType::META_IMAGE, $image_id);
+                         }
+                     }
+
+                     $prepared[] = [
+                         'type' => 'link',
+                         'link_id' => $link_id,
+                         'featured' => !empty($item['featured'])
+                     ];
+                 }
+            }
+        }
+        
+        return $prepared;
     }
 
     /**

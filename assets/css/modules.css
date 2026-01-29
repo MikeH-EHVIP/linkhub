@@ -837,8 +837,8 @@ body.admin-bar.lh-tree-page {
 /* Collections */
 .lh-collection {
     margin-bottom: 20px;
-    border-radius: 4px; 
-    overflow: hidden; 
+    border-radius: 4px;
+    overflow: hidden;
     width: 100%;
 }
 .lh-collection-title {
@@ -847,33 +847,12 @@ body.admin-bar.lh-tree-page {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    user-select: none;
 }
 .lh-collection-items {
     display: flex;
     flex-direction: column;
-    gap: 15px; 
-    padding: 15px;
-}
-
-
-/* Collections */
-.lh-collection {
-    margin-bottom: 20px;
-    border-radius: 4px; 
-    overflow: hidden; 
-    width: 100%;
-}
-.lh-collection-title {
-    padding: 12px 15px;
-    font-weight: 700;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.lh-collection-items {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; 
+    gap: 15px;
     padding: 15px;
 }
 

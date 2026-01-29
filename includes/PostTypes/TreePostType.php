@@ -123,6 +123,16 @@ class TreePostType {
         \add_filter('body_class', [self::class, 'add_body_class']);
         \add_filter('get_edit_post_link', [self::class, 'custom_edit_link'], 10, 2);
         \add_action('admin_bar_menu', [self::class, 'customize_admin_bar_edit_link'], 80);
+        \add_action('pre_get_posts', [self::class, 'limit_archive_posts']);
+    }
+
+    /**
+     * Limit archive to 1 post to simulate single page
+     */
+    public static function limit_archive_posts($query) {
+        if (!is_admin() && $query->is_main_query() && is_post_type_archive(self::POST_TYPE)) {
+            $query->set('posts_per_page', 1);
+        }
     }
 
     /**
@@ -155,10 +165,20 @@ class TreePostType {
      * Add body class to tree pages for CSS targeting
      */
     public static function add_body_class($classes) {
-        if (is_singular(self::POST_TYPE)) {
+        if (is_singular(self::POST_TYPE) || is_post_type_archive(self::POST_TYPE)) {
             $classes[] = 'lh-tree-page';
             
             global $post;
+            // On archive, get the first post if global isn't set
+            if (is_post_type_archive(self::POST_TYPE) && empty($post)) {
+                $posts = get_posts([
+                    'post_type' => self::POST_TYPE,
+                    'posts_per_page' => 1,
+                    'post_status' => 'publish',
+                ]);
+                $post = !empty($posts) ? $posts[0] : null;
+            }
+
             if ($post) {
                 $hide_header_footer = get_post_meta($post->ID, self::META_HIDE_HEADER_FOOTER, true);
                 
@@ -174,16 +194,31 @@ class TreePostType {
      * Use blank template if option is enabled
      */
     public static function maybe_use_blank_template($template) {
-        if (!is_singular(self::POST_TYPE)) {
+        if (!is_singular(self::POST_TYPE) && !is_post_type_archive(self::POST_TYPE)) {
             return $template;
         }
 
         global $post;
-        if (!$post) {
+        
+        // On archive, get the first post if global isn't set
+        if (is_post_type_archive(self::POST_TYPE) && empty($post)) {
+            // We can't rely on the global query yet inside template_include sometimes, 
+            // but usually it's safe. However, let's fetch manual to be sure.
+            $posts = get_posts([
+                'post_type' => self::POST_TYPE,
+                'posts_per_page' => 1,
+                'post_status' => 'publish',
+            ]);
+            $post_obj = !empty($posts) ? $posts[0] : null;
+        } else {
+            $post_obj = $post;
+        }
+
+        if (!$post_obj) {
             return $template;
         }
 
-        $hide_header_footer = get_post_meta($post->ID, self::META_HIDE_HEADER_FOOTER, true);
+        $hide_header_footer = get_post_meta($post_obj->ID, self::META_HIDE_HEADER_FOOTER, true);
         
         if ($hide_header_footer === '1') {
             $blank_template = LH_PLUGIN_DIR . 'includes/templates/blank-tree-template.php';
@@ -256,6 +291,7 @@ class TreePostType {
                 'slug'       => 'links',
                 'with_front' => false,
             ],
+            'has_archive'           => true,
         ];
         
         \register_post_type(self::POST_TYPE, $args);
